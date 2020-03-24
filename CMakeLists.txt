@@ -30,6 +30,7 @@ include_directories(
 	${OpenCV_INCLUDE_DIRS}
 	lcsim/include/lcsim
 	alglib/include/
+	python
 )
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
@@ -42,3 +43,8 @@ target_link_libraries(
   ${OpenCV_LIBRARIES}
 )
 set_target_properties(lcsim PROPERTIES LINKER_LANGUAGE CXX)
+
+# Pylc
+add_subdirectory(pybind11)
+pybind11_add_module(pylc_lib python/pylc_lib.cpp)
+target_link_libraries(pylc_lib PRIVATE pybind11::module alglib lcsim ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
