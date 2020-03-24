@@ -1,0 +1,44 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(lcsim)
+
+set (CMAKE_CXX_STANDARD 11)
+
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(PCL REQUIRED)
+
+# Alglib
+file(GLOB alglib_SRC
+		"alglib/src/*.cpp"
+		"alglib/include/*.h"
+)
+
+add_library(alglib ${alglib_SRC})
+set_property(TARGET alglib PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Lcsim
+file(GLOB lcsim_SRC
+    "lcsim/include/lcsim/*.h"
+    "lcsim/src/*.cpp"
+)
+message("${lcsim_SRC}")
+
+include_directories(
+	${EIGEN3_INCLUDE_DIR}
+	${PCL_INCLUDE_DIRS}
+	${OpenCV_INCLUDE_DIRS}
+	lcsim/include/lcsim
+	alglib/include/
+)
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
+add_library(lcsim ${lcsim_SRC})
+target_link_libraries(
+  lcsim
+  alglib
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+set_target_properties(lcsim PROPERTIES LINKER_LANGUAGE CXX)
