@@ -4,7 +4,6 @@
 #include <string>
 #include <iostream>
 #include <common.h>
-#include <util.h>
 
 namespace lc{
 
@@ -34,7 +33,7 @@ public:
 	std::pair<cv::Mat, cv::Mat> calculateSurface(const Eigen::Matrix4Xf& design_pts, const Datum& cam_data, const Laser& laser_data);
     void computeDepthHits(std::pair<cv::Mat,cv::Mat>& surface_data, const cv::Mat& depth_img, const Datum& cam_data);
 
-    void processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, std::vector<PointXYZI>& cloud, bool compute_cloud=true);
+    void processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, pcl::PointCloud<pcl::PointXYZRGB>& cloud, bool compute_cloud=true);
 
 };
 

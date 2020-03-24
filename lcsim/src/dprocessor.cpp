@@ -549,7 +549,7 @@ std::shared_ptr<Angles> DatumProcessor::calculateAngles(const Eigen::Matrix4Xf& 
         straight_plane(3, 0) = 0.;
 
         // Rotation Matrices
-        Eigen::Matrix4f lrotated_matrix = getTransformMatrix(0,laser_angle,0,0,0,0);
+        Eigen::Matrix4f lrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0);
         Eigen::Matrix4Xf lrotated_plane = ((lrotated_matrix.inverse().transpose())*straight_plane);
         planes_lframe.col(i) = lrotated_plane;
     }
@@ -572,7 +572,7 @@ std::shared_ptr<Angles> DatumProcessor::calculateAngles(const Eigen::Matrix4Xf& 
         float C = plane_data[u*4 + 2];
         float D = plane_data[u*4 + 3];
         cv::Vec4f design_pt;
-        intersect(A, B, C, D, cam_data.nmap_nn.at<cv::Vec3f>(v,u), design_pt);
+        Util::intersect(A, B, C, D, cam_data.nmap_nn.at<cv::Vec3f>(v,u), design_pt);
 
         // Store
         design_pts_new(0,u) = design_pt[0];
@@ -646,7 +646,7 @@ std::pair<cv::Mat, cv::Mat> DatumProcessor::calculateSurface(const Eigen::Matrix
         straight_plane(3, 0) = 0.;
 
         // Rotation Matrices
-        Eigen::Matrix4f lrotated_matrix = getTransformMatrix(0,laser_angle,0,0,0,0);
+        Eigen::Matrix4f lrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0);
         Eigen::Matrix4Xf lrotated_plane = ((lrotated_matrix.inverse().transpose())*straight_plane);
         planes_lframe.col(i) = lrotated_plane;
     }
@@ -667,7 +667,7 @@ std::pair<cv::Mat, cv::Mat> DatumProcessor::calculateSurface(const Eigen::Matrix
             float B = plane_data[u*4 + 1];
             float C = plane_data[u*4 + 2];
             float D = plane_data[u*4 + 3];
-            intersect(A, B, C, D, cam_data.nmap_nn.at<cv::Vec3f>(v,u), surface_pts.at<cv::Vec4f>(v,u));
+            Util::intersect(A, B, C, D, cam_data.nmap_nn.at<cv::Vec3f>(v,u), surface_pts.at<cv::Vec4f>(v,u));
 
             if(surface_pts.at<cv::Vec4f>(v,u)[2] < 0 || fabs(surface_pts.at<cv::Vec4f>(v,u)[1]) > 3.0){
                 surface_pts.at<cv::Vec4f>(v,u)[0] = nanVal;
@@ -696,8 +696,8 @@ std::pair<cv::Mat, cv::Mat> DatumProcessor::calculateSurface(const Eigen::Matrix
         straight_plane(3, 0) = 0.;
 
         // Rotation Matrices
-        Eigen::Matrix4f lrotated_matrix = getTransformMatrix(0,laser_angle,0,0,0,0) * getTransformMatrix(0,0,0,(laser_data.thickness/2),0,0) * getTransformMatrix(0,-laser_data.divergence,0,0,0,0);
-        Eigen::Matrix4f rrotated_matrix = getTransformMatrix(0,laser_angle,0,0,0,0) * getTransformMatrix(0,0,0,-(laser_data.thickness/2),0,0) * getTransformMatrix(0,laser_data.divergence,0,0,0,0);
+        Eigen::Matrix4f lrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0) * Util::getTransformMatrix(0,0,0,(laser_data.thickness/2),0,0) * Util::getTransformMatrix(0,-laser_data.divergence,0,0,0,0);
+        Eigen::Matrix4f rrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0) * Util::getTransformMatrix(0,0,0,-(laser_data.thickness/2),0,0) * Util::getTransformMatrix(0,laser_data.divergence,0,0,0,0);
 
         // Transform planes
         Eigen::Matrix4Xf lrotated_plane = ((lrotated_matrix.inverse().transpose())*straight_plane);
@@ -732,9 +732,9 @@ std::pair<cv::Mat, cv::Mat> DatumProcessor::calculateSurface(const Eigen::Matrix
 
             // Range Uncertainty
             cv::Vec4f intersect_point_bot;
-            intersect(Al, Bl, Cl, Dl, cam_data.nmap_nn.at<cv::Vec3f>(v,u), intersect_point_bot);
+            Util::intersect(Al, Bl, Cl, Dl, cam_data.nmap_nn.at<cv::Vec3f>(v,u), intersect_point_bot);
             cv::Vec4f intersect_point_top;
-            intersect(Ar, Br, Cr, Dr, cam_data.nmap_nn.at<cv::Vec3f>(v,u), intersect_point_top);
+            Util::intersect(Ar, Br, Cr, Dr, cam_data.nmap_nn.at<cv::Vec3f>(v,u), intersect_point_top);
             float range_unc = sqrt(pow(intersect_point_bot[0]-intersect_point_top[0], 2)
                                    + pow(intersect_point_bot[1]-intersect_point_top[1], 2)
                                    + pow(intersect_point_bot[2]-intersect_point_top[2], 2) );
@@ -747,9 +747,9 @@ std::pair<cv::Mat, cv::Mat> DatumProcessor::calculateSurface(const Eigen::Matrix
 
             // Z Uncertaintiy
             cv::Vec4f zintersect_point_bot;
-            intersect(Al, Bl, Cl, Dl, right_ray, zintersect_point_bot);
+            Util::intersect(Al, Bl, Cl, Dl, right_ray, zintersect_point_bot);
             cv::Vec4f zintersect_point_top;
-            intersect(Ar, Br, Cr, Dr, left_ray, zintersect_point_top);
+            Util::intersect(Ar, Br, Cr, Dr, left_ray, zintersect_point_top);
             float range_unc = sqrt(pow(zintersect_point_bot[0]-zintersect_point_top[0], 2)
                                    + pow(zintersect_point_bot[1]-zintersect_point_top[1], 2)
                                    + pow(zintersect_point_bot[2]-zintersect_point_top[2], 2) );
@@ -802,7 +802,7 @@ void DatumProcessor::computeDepthHits(std::pair<cv::Mat,cv::Mat>& surface_data, 
     }
 }
 
-void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, std::vector<PointXYZI>& cloud, bool compute_cloud){
+void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, pcl::PointCloud<pcl::PointXYZRGB>& cloud, bool compute_cloud){
     bool debug = false;
     auto begin = std::chrono::steady_clock::now();
     auto beginf = std::chrono::steady_clock::now();
@@ -857,13 +857,34 @@ void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::
     //std::cout << "F = " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin).count() << "[µs]" << std::endl;
     //begin = std::chrono::steady_clock::now();
 
-    // Store it
+//    // Store it
+//    for(int v=0; v<surface_pts.size().height; v++){
+//        for(int u=0; u<surface_pts.size().width; u++){
+//            int index = v*surface_pts.size().width + u;
+//            const cv::Vec4f& coord3D = surface_pts.at<cv::Vec4f>(v,u);
+//            if(std::isnan(coord3D[0])) continue;
+//            pcl::PointXYZRGB point;
+//            point.x = coord3D[0];
+//            point.y = coord3D[1];
+//            point.z = coord3D[2];
+//            point.r = 1.0;
+//            point.g = coord3D[3];
+//            point.b = 1.0;
+//            cloud.push_back(point);
+//        }
+//    }
+
     cloud.resize(surface_pts.size().width*surface_pts.size().height);
     for(int v=0; v<surface_pts.size().height; v++){
         for(int u=0; u<surface_pts.size().width; u++){
             int index = v*surface_pts.size().width + u;
             const cv::Vec4f& coord3D = surface_pts.at<cv::Vec4f>(v,u);
-            cloud[index] = coord3D;
+            cloud[index].x = coord3D[0];
+            cloud[index].y = coord3D[1];
+            cloud[index].z = coord3D[2];
+            cloud[index].r = 1.0;
+            cloud[index].g = coord3D[3];
+            cloud[index].b = 1.0;
         }
     }
 

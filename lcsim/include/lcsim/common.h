@@ -9,8 +9,19 @@
 #include <opencv/cxeigen.hpp>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
+#include <pcl/common/transforms.h>
 #include <chrono>
 #include <memory>
+#include <util.h>
+#ifdef ROS
+#include <ros/ros.h>
+#include <ros/package.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <cv_bridge/cv_bridge.h>
+#endif
 
 namespace lc{
 
@@ -65,10 +76,8 @@ public:
 
 class Output{
 public:
-    //std::vector<sensor_msgs::PointCloud2> clouds;
-    //std::vector<sensor_msgs::Image> images;
-    //std::vector<std::vector<sensor_msgs::Image>> images_multi;
-    //sensor_msgs::PointCloud2 full_cloud;
+    std::vector<Eigen::Matrix<float, Eigen::Dynamic, 4>> clouds;
+    std::vector<std::vector<cv::Mat>> images_multi;
     Eigen::MatrixXf full_cloud_eig;
 
     Eigen::MatrixXf output_pts, laser_rays, spline;
@@ -77,6 +86,10 @@ public:
     std::vector<float> accels;
     std::vector<Eigen::MatrixXf> output_pts_set;
     std::vector<Eigen::MatrixXf> spline_set;
+
+    #ifdef ROS
+    sensor_msgs::PointCloud2 full_cloud;
+    #endif
 
     //std::vector<SplineParams> all_params;
 };

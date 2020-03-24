@@ -44,7 +44,25 @@ target_link_libraries(
 )
 set_target_properties(lcsim PROPERTIES LINKER_LANGUAGE CXX)
 
+# ROS Flag
+if (${ROS})
+	add_definitions(-DROS)
+	message(STATUS "Building with ROS support.")
+	find_package(catkin REQUIRED COMPONENTS
+			pcl_conversions
+			pcl_ros
+			roscpp
+			rospy
+			cv_bridge
+			geometry_msgs
+			std_msgs
+	)
+	include_directories(${catkin_INCLUDE_DIRS})
+else()
+	set(catkin_LIBRARIES "")
+endif()
+
 # Pylc
 add_subdirectory(pybind11)
 pybind11_add_module(pylc_lib python/pylc_lib.cpp)
-target_link_libraries(pylc_lib PRIVATE pybind11::module alglib lcsim ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(pylc_lib PRIVATE pybind11::module alglib lcsim ${OpenCV_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES})
