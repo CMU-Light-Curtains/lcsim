@@ -1,0 +1,25 @@
+{
+    "sensors": [
+    ],
+    "lc": [
+        {
+            "type": "laser",
+            "id": "laser01",
+            "x": 0.0, "y": -1, "z": 0.5, "roll": 0.0, "pitch": 0.0, "yaw": -0.0,
+            "fov": 80,
+            "attach": "hero"
+        },
+        {
+            "type": "camera",
+            "id": "camera01",
+            "x": -0.2, "y": -1, "z": 0.5, "roll": 0.0, "pitch": 0.0, "yaw": -0.0,
+            "width": 512,
+            "height": 512,
+            "fov": 80,
+            "distortion": [0.000000, 0.000000, 0.000000, 0.000000, 0.000000],
+            "limit": 1.0,
+            "attach": "hero",
+            "rgb": true
+        }
+    ]  
+}

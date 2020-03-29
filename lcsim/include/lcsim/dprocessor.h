@@ -34,6 +34,7 @@ public:
     void computeDepthHits(std::pair<cv::Mat,cv::Mat>& surface_data, const cv::Mat& depth_img, const Datum& cam_data);
 
     void processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, pcl::PointCloud<pcl::PointXYZRGB>& cloud, bool compute_cloud=true);
+    void processTest(Eigen::MatrixXf& input_pts, std::string cam_name, std::string laser_name, std::shared_ptr<Output>& output, int mode);
 
 };
 

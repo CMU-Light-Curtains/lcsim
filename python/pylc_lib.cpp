@@ -6,6 +6,8 @@
 #include <pybind11/numpy.h>
 #include <pylc_converters.hpp>
 #include <dprocessor.h>
+#include <algo.h>
+#include <fitting.h>
 
 using namespace lc;
 
@@ -77,6 +79,17 @@ void processPointsJoint(std::shared_ptr<DatumProcessor>& datumProcessor, std::ve
     }
 
     if(get_full_cloud){
+
+        // Remove temp
+        pcl::PointCloud<pcl::PointXYZRGB> full_cloud_temp;
+        for(auto i=0; i<full_cloud.size(); i++){
+            const pcl::PointXYZRGB& p = full_cloud[i];
+            if(std::isnan(p.x)) continue;
+            full_cloud_temp.push_back(p);
+        }
+        full_cloud = full_cloud_temp;
+
+
         #ifdef ROS
         pcl::toROSMsg(full_cloud, output->full_cloud);
         #endif
@@ -142,13 +155,44 @@ PYBIND11_MODULE(pylc_lib, m) {
             #endif
             ;
 
+    // Spline
+    py::class_<Angles, std::shared_ptr<Angles>>(m, "Angles")
+            .def(py::init<>())
+            .def_readwrite("max_velo", &Angles::max_velo)
+            .def_readwrite("summed_peak", &Angles::summed_peak)
+            .def_readwrite("design_pts", &Angles::design_pts)
+            .def_readwrite("accels", &Angles::accels)
+            .def_readwrite("velocities", &Angles::velocities)
+            .def_readwrite("peaks", &Angles::peaks)
+            ;
+
+    // Spline
+    py::class_<SplineParams>(m, "SplineParams")
+            .def(py::init<>())
+            ;
+    py::class_<SplineParamsVec, std::shared_ptr<SplineParamsVec>>(m, "SplineParamsVec")
+            .def(py::init<>())
+            .def_readwrite("splineParams", &SplineParamsVec::splineParams)
+            ;
+
     // DatumProcessor
     py::class_<DatumProcessor, std::shared_ptr<DatumProcessor>>(m, "DatumProcessor")
             .def(py::init<>())
             .def("setSensors", &DatumProcessor::setSensors)
             ;
 
+    // Fitting
+    py::class_<Fitting, std::shared_ptr<Fitting>>(m, "Fitting")
+            .def(py::init<std::shared_ptr<DatumProcessor>>())
+            .def("curtainSplitting", &Fitting::curtainSplitting)
+            .def("curtainNodes", &Fitting::curtainNodes)
+            .def("splineToAngles", &Fitting::splineToAngles)
+            ;
+
     m.def("processPointsJoint", &processPointsJoint, "processPointsJoint");
+    m.def("fitBSpline", &Algo::fitBSpline, "fitBSpline");
+    m.def("solveT", &Algo::solveT, "solveT");
+
 
     #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

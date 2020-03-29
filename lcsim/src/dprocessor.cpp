@@ -364,10 +364,148 @@ Eigen::Matrix4Xf DatumProcessor::findCameraIntersections(const Datum& cam_data, 
     return design_pts;
 }
 
+//Eigen::Matrix4Xf DatumProcessor::findCameraIntersectionsOpt(const Datum& cam_data, const std::vector<int>& good_inds_temp, const std::vector<Point2D>& pts)
+//{
+//    std::vector<int> good_inds = good_inds_temp;
+//    if(good_inds.size() == 0){
+//        good_inds.resize(pts.size());
+//        for(int i=0; i<good_inds.size(); i++) {
+//            good_inds[i] = i;
+//        }
+//    }
+//
+//    // Empty Matrix - Number of points of size rows
+//    Eigen::Matrix4Xf design_pts(4, cam_data.imgw);
+//    int valid_points = 0;
+//
+//    // Calculate camera ray intersections for design points
+//    Eigen::Vector2f p0(0, 0);
+//
+//    // Bins
+//    std::vector<std::vector<int>> bins;
+//    bins.resize(cam_data.imgw + 1);
+//
+//    // Iterate through each angle
+//    for(int i=0; i<pts.size(); i++){
+//        if(std::find(good_inds.begin(), good_inds.end(), i) == good_inds.end()) continue;
+//        float pt_angle = -((atan2f(pts[i](1), pts[i](0)) * 180 / M_PI) - 90) + 0 + 0;
+//
+//        // Iterate through each bin to find best bin
+//        for(int j=0; j<bins.size(); j++) {
+//            float left_angle;
+//            float right_angle;
+//            if(j == 0){
+//                left_angle = -100;
+//                right_angle = cam_data.valid_angles[j];
+//            }else if(j == bins.size()-1){
+//                left_angle = cam_data.valid_angles[j-1];
+//                right_angle = 100;
+//            }else{
+//                left_angle = cam_data.valid_angles[j-1];
+//                right_angle = cam_data.valid_angles[j];
+//            }
+//
+//            // Add if satisfies
+//            if (pt_angle > left_angle && pt_angle < right_angle)  {
+//                bins[j].emplace_back(i);
+//                break;
+//            }
+//        }
+//
+//        // Sort by range?
+//    }
+//
+//
+//    // Idea for Opt 2 for interpolate just try again
+//    for (int i = 0; i < cam_data.imgw; i++) {
+//
+//        // Get Ray along mid
+//        Eigen::Vector2f dir(cam_data.midrays[0].at<float>(0, i), cam_data.midrays[2].at<float>(0, i));
+//        dir.normalize();
+//        Ray cam_ray = Ray(p0, dir);
+//        float cam_angle = cam_data.valid_angles[i];
+//
+//        // Iterate the valid set of points (Need to ensure the points are continuous)
+//        bool found_intersection = false;
+//        Eigen::Vector2f intersection_pt(0.,0.);
+//
+//        // Start at right bin and search for points
+//        int g1 = -1;
+//        int g2 = -1;
+//        for(int j=i; j>=0; j--){
+//            if(!bins[j].size()) continue;
+//            g1 = bins[j].front(); // need a way to pop out?
+//            // Keep searching bin until i find one that is close?
+//            bins[j].erase(bins[j].begin());
+//            break;
+//        }
+//        for(int j=i+1; j<bins.size(); j++){
+//            if(!bins[j].size()) continue;
+//            g2 = bins[j].front();
+//            //bins[j].erase(bins[j].begin());
+//            break;
+//        }
+//
+//        if(g1 != -1 && g2 != -1){
+//            Eigen::Vector2f p1(pts[g1](0), pts[g1](1));
+//            Eigen::Vector2f p2(pts[g2](0), pts[g2](1));
+//
+//            // Create the intersection point for camera
+//            Line p1p2 = Line::Through(p1, p2);
+//            Eigen::Vector2f pt = cam_ray.intersectionPoint(p1p2); //guaranteed to be on line from p1 to p2
+//
+//            // Check if pt is between the two design points
+//            // from: https://www.lucidar.me/en/mathematics/check-if-a-point-belongs-on-a-line-segment/
+//            Eigen::Vector2f p1p2_vec = p2 - p1;
+//            Eigen::Vector2f p1pt_vec = pt - p1;
+//
+//            float k_p1p2 = p1p2_vec.dot(p1p2_vec); //max distance if point is between p1 and p2;
+//            float k_p1pt = p1p2_vec.dot(p1pt_vec);
+//
+//            if (k_p1pt < 0)
+//                found_intersection = false;
+//            else if (k_p1pt > k_p1p2)
+//                found_intersection = false;
+//            else if (abs(k_p1pt) < FLT_EPSILON) {
+//                found_intersection = true;
+//                intersection_pt = pt;
+//            } else if (abs(k_p1pt - k_p1p2) < FLT_EPSILON) {
+//                found_intersection = true;
+//                intersection_pt = pt;
+//            } else if (k_p1pt > 0 && k_p1pt < k_p1p2) {
+//                found_intersection = true;
+//                intersection_pt = pt;
+//            }
+//            else
+//                found_intersection = false;
+//        }
+//
+//        float cp = (float)i/float(cam_data.imgw);
+//        if(cam_data.limit > 0) if(cp > cam_data.limit) found_intersection = false;
+//        if(cam_data.limit < 0) if(cp < fabs(cam_data.limit)) found_intersection = false;
+//
+//        if (found_intersection) {
+//            design_pts(0, i) = intersection_pt(0); //x-value of pt
+//            design_pts(1, i) = 0; //y-value of pt (zero since in xz plane)
+//            design_pts(2, i) = intersection_pt(1); //z-value of pt
+//            design_pts(3, i) = 1; // 1 to make pt homogenous
+//            valid_points+=1;
+//        } else {
+//            design_pts(0, i) = 0; //x-value of pt
+//            design_pts(1, i) = 0; //y-value of pt (zero since in xz plane)
+//            design_pts(2, i) = 0; //z-value of pt
+//            design_pts(3, i) = -1; // -1 indicates bad point
+//        }
+//
+//    }
+//
+//    return design_pts;
+//
+//}
+
 Eigen::Matrix4Xf DatumProcessor::findCameraIntersectionsOpt(const Datum& cam_data, const std::vector<int>& good_inds_temp, const std::vector<Point2D>& pts)
 {
     // This function only optimal at continuous regions
-
     std::vector<int> good_inds = good_inds_temp;
     if(good_inds.size() == 0){
         good_inds.resize(pts.size());
@@ -888,4 +1026,51 @@ void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::
         }
     }
 
+}
+
+void DatumProcessor::processTest(Eigen::MatrixXf& input_pts, std::string cam_name, std::string laser_name, std::shared_ptr<Output>& output, int mode){
+    if(!cam_mapping_.count(cam_name)) throw std::runtime_error("No such camera name");
+    Datum& cam_data = *(c_datums_[cam_mapping_[cam_name]].get());
+
+    if(!cam_data.laser_data.count(laser_name)) throw std::runtime_error("No such laser name");
+    Laser& laser_data = cam_data.laser_data[laser_name];
+
+    // Convert to vec
+    std::vector<Point2D> pts(input_pts.rows());
+    if(mode == 0){
+        for(int i=0; i<pts.size(); i++){
+            pts[i] = Point2D(input_pts(i, 0),input_pts(i, 2));
+        }
+    }else if(mode == 1){
+        for(int i=0; i<pts.size(); i++){
+            pts[i] = Point2D(input_pts(i, 0),input_pts(i, 1));
+        }
+    }
+
+    // Check points inside sensors
+    auto good_inds = checkPoints(pts, cam_data, laser_data);
+
+    // Get true points based on cam ray intersections (Slow)
+    //auto design_pts = findCameraIntersections(cam_data, good_inds, pts);
+    Eigen::Matrix4Xf design_pts = findCameraIntersectionsOpt(cam_data, good_inds, pts);
+
+    // Get Angles
+    std::shared_ptr<Angles> angles = calculateAngles(design_pts, cam_data, laser_data, true, true);
+
+//        // Store rays
+//        Eigen::MatrixXf rays;
+//        rays.resize(cam_data.imgw, 3);
+//        for(int u=0; u<cam_data.imgw; u++){
+//            rays(u,0) = cam_data.midrays[0].at<float>(0,u);
+//            rays(u,1) = cam_data.midrays[1].at<float>(0,u);
+//            rays(u,2) = cam_data.midrays[2].at<float>(0,u);
+//        }
+
+    // Store
+    output->spline = input_pts;
+    output->output_pts = angles->output_pts;
+    output->angles = angles->angles;
+    output->velocities = angles->velocities;
+    output->accels = angles->accels;
+    //output->laser_rays = rays;
 }

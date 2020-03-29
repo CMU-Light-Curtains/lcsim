@@ -1,0 +1,97 @@
+{
+    "sensors": [
+    ],
+    "lc": [
+        {
+            "type": "laser",
+            "id": "laser01",
+            "x": 0.0, "y": -2.0, "z": 0.0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0,
+            "fov": 200,
+            "attach": "hero"
+        },
+        {
+            "type": "laser",
+            "id": "laser02",
+            "x": 0.0, "y": -2.0, "z": -0.5, "roll": 0.0, "pitch": 0.0, "yaw": -180.0,
+            "fov": 200,
+            "attach": "hero"
+        },
+        {
+            "type": "camera",
+            "id": "camera01",
+            "x": -0.8, "y": -2.0, "z": 0.0, "roll": 0.0, "pitch": 0.0, "yaw": 40.0,
+            "width": 1392,
+            "height": 512,
+            "fov": 120,
+            "intrinsics": [9.842439e+02, 0.000000e+00, 6.900000e+02, 0.000000e+00, 9.808141e+02, 2.331966e+02, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-3.728755e-01, 2.037299e-01, 2.219027e-03, 1.383707e-03, -7.233722e-02],
+            "limit": 1.0,
+            "attach": "hero",
+            "rgb": true,
+            "comment": "kitti camera 01"
+        },
+        {
+            "type": "camera",
+            "id": "camera02",
+            "x": 1.0, "y": -2.0, "z": 0.0, "roll": 0.0, "pitch": 0.0, "yaw": -40.0,
+            "width": 1920,
+            "height": 1200,
+            "fov": 120,
+            "intrinsics": [1402.7679150197941, 0.000000e+00, 981.7422076685901, 0.000000e+00, 1402.7679150197941, 610.7617664117456, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-0.1688970042736768, 0.11837140963206995, -0.024816794505246636, -0.000000, 0.000000],
+            "limit": 1.0,
+            "attach": "hero",
+            "rgb": false,
+            "comment": "argo front centre"
+        },
+        {
+            "type": "camera",
+            "id": "camera03",
+            "x": 1.0, "y": -2.0, "z": -0.5, "roll": 0.0, "pitch": 0.0, "yaw": -145.0,
+            "width": 1920,
+            "height": 1080,
+            "fov": 120,
+            "intrinsics": [900.0, 0.000000e+00, 959.5, 0.000000e+00, 900.0, 539.5, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-0.25, 0.06, 0.0, 0.0, 0.0],
+            "limit": 1.0,
+            "attach": "hero",
+            "rgb": false,
+            "comment": "gopro 4 black wide angle"
+        },
+        {
+            "type": "camera",
+            "id": "camera04",
+            "x": -1.0, "y": -2.0, "z": -0.5, "roll": 0.0, "pitch": 0.0, "yaw": -215.0,
+            "width": 1920,
+            "height": 1080,
+            "fov": 120,
+            "intrinsics": [900.0, 0.000000e+00, 959.5, 0.000000e+00, 900.0, 539.5, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-0.25, 0.06, 0.0, 0.0, 0.0],
+            "limit": 1.0,
+            "attach": "hero",
+            "rgb": false
+        },
+        {
+            "type": "camera",
+            "id": "cameraX",
+            "x": 0.2, "y": -4.0, "z": -8.0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0,
+            "width": 512,
+            "height": 512,
+            "fov": 80,
+            "distortion": [-0.000000, 0.000000, -0.000000, -0.000000, 0.000000],
+            "attach": "hero",
+            "rgb": true
+        },
+        {
+            "type": "camera",
+            "id": "cameraY",
+            "x": 0.2, "y": -4.0, "z": 8.0, "roll": 0.0, "pitch": 0.0, "yaw": 180.0,
+            "width": 512,
+            "height": 512,
+            "fov": 80,
+            "distortion": [-0.000000, 0.000000, -0.000000, -0.000000, 0.000000],
+            "attach": "hero",
+            "rgb": true
+        }
+    ]
+}

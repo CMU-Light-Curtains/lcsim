@@ -1,0 +1,94 @@
+{
+    "sensors": [
+    ],
+    "lc": [
+        {
+            "type": "laser",
+            "id": "laser01",
+            "x": -1.0, "y": -1.0, "z": 1.8, "roll": 0.0, "pitch": 0.0, "yaw": 45.0,
+            "fov": 200,
+            "attach": "hero"
+        },
+        {
+            "type": "camera",
+            "id": "camera01",
+            "x": -0.75, "y": -1.0, "z": 2.05, "roll": 0.0, "pitch": 0.0, "yaw": 45.0,
+            "width": 1920,
+            "height": 1080,
+            "fov": 120,
+            "intrinsics": [900.0, 0.000000e+00, 959.5, 0.000000e+00, 900.0, 539.5, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-0.25, 0.06, 0.0, 0.0, 0.0],
+            "limit": 0.9,
+            "attach": "hero",
+            "rgb": true,
+            "comment": "gopro 4 black wide angle"
+        },
+
+        {
+            "type": "laser",
+            "id": "laser02",
+            "x": 1.0, "y": -1.0, "z": 1.8, "roll": 0.0, "pitch": 0.0, "yaw": -45.0,
+            "fov": 200,
+            "attach": "hero"
+        },
+        {
+            "type": "camera",
+            "id": "camera02",
+            "x": 0.75, "y": -1.0, "z": 2.05, "roll": 0.0, "pitch": 0.0, "yaw": -45.0,
+            "width": 1920,
+            "height": 1080,
+            "fov": 120,
+            "intrinsics": [900.0, 0.000000e+00, 959.5, 0.000000e+00, 900.0, 539.5, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-0.25, 0.06, 0.0, 0.0, 0.0],
+            "limit": -0.1,
+            "attach": "hero",
+            "rgb": true,
+            "comment": "gopro 4 black wide angle"
+        },
+
+        {
+            "type": "laser",
+            "id": "laser03",
+            "x": 1.0, "y": -1.0, "z": -1.8, "roll": 0.0, "pitch": 0.0, "yaw": -135.0,
+            "fov": 200,
+            "attach": "hero"
+        },
+        {
+            "type": "camera",
+            "id": "camera03",
+            "x": 0.75, "y": -1.0, "z": -2.05, "roll": 0.0, "pitch": 0.0, "yaw": -135.0,
+            "width": 1920,
+            "height": 1080,
+            "fov": 120,
+            "intrinsics": [900.0, 0.000000e+00, 959.5, 0.000000e+00, 900.0, 539.5, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-0.25, 0.06, 0.0, 0.0, 0.0],
+            "limit": 0.9,
+            "attach": "hero",
+            "rgb": true,
+            "comment": "gopro 4 black wide angle"
+        },
+
+        {
+            "type": "laser",
+            "id": "laser04",
+            "x": -1.0, "y": -1.0, "z": -1.8, "roll": 0.0, "pitch": 0.0, "yaw": 135.0,
+            "fov": 200,
+            "attach": "hero"
+        },
+        {
+            "type": "camera",
+            "id": "camera04",
+            "x": -0.75, "y": -1.0, "z": -2.05, "roll": 0.0, "pitch": 0.0, "yaw": 135.0,
+            "width": 1920,
+            "height": 1080,
+            "fov": 120,
+            "intrinsics": [900.0, 0.000000e+00, 959.5, 0.000000e+00, 900.0, 539.5, 0.000000e+00, 0.000000e+00, 1.000000e+00],
+            "distortion": [-0.25, 0.06, 0.0, 0.0, 0.0],
+            "limit": -0.1,
+            "attach": "hero",
+            "rgb": true,
+            "comment": "gopro 4 black wide angle"
+        }
+    ]
+}
+

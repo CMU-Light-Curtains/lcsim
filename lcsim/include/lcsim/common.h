@@ -146,6 +146,16 @@ struct Angles{
     bool exceed = false;
 };
 
+struct SplineParams{
+    Eigen::Vector2f p0, p1, p2, p3;
+    float Ax,Bx,Cx,Dx;
+    float Ay,By,Cy,Dy;
+    float A,B,C,D,E;
+};
+
+struct SplineParamsVec{
+    std::vector<SplineParams> splineParams;
+};
 
 typedef std::vector<std::shared_ptr<Datum>> DatumVector;
 

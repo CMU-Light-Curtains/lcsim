@@ -1,0 +1,44 @@
+{
+    "sensors": [
+    ],
+    "lc": [
+        {
+            "type": "laser",
+            "id": "laser01",
+            "x": 0.0, "y": -2.0, "z": 0.0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0,
+            "fov": 80,
+            "attach": "hero"
+        },
+        {
+            "type": "laser",
+            "id": "laser02",
+            "x": 0.0, "y": -2.0, "z": 0.0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0,
+            "fov": 80,
+            "attach": "hero"
+        },
+        {
+            "type": "camera",
+            "id": "camera01",
+            "x": -0.2, "y": -2.0, "z": 0.0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0,
+            "width": 800,
+            "height": 600,
+            "fov": 80,
+            "distortion": [-0.033918, 0.027494, -0.001691, -0.001078, 0.000000],
+            "limit": 0.5,
+            "attach": "hero",
+            "rgb": true
+        },
+        {
+            "type": "camera",
+            "id": "camera02",
+            "x": 0.2, "y": -2.0, "z": 0.0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0,
+            "width": 800,
+            "height": 600,
+            "fov": 80,
+            "distortion": [-0.033918, 0.027494, -0.001691, -0.001078, 0.000000],
+            "limit": -0.5,
+            "attach": "hero",
+            "rgb": false
+        }
+    ]
+}
