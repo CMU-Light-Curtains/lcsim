@@ -1,7 +1,6 @@
 import os
 import sys
 import math
-import numpy as np
 
 from transformations import euler_matrix
 
@@ -218,9 +217,9 @@ if __name__ == '__main__':
     # Create LCDevice.
     lc_device = LCDevice(LASER_PARAMS, CAMERA_PARAMS)
 
-    depth_image = np.load('data/depth_image.npy')
-    rgb_image = np.load('data/rgb_image.npy')
-    design_points = np.load('data/design_points.npy')
+    depth_image = np.load('example/depth_image.npy')
+    rgb_image = np.load('example/rgb_image.npy')
+    design_points = np.load('example/design_points.npy')
     design_points = design_points[:, [0, 2]]
 
     plt.imshow(depth_image); plt.show()
