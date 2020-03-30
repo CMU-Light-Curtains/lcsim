@@ -1,3 +1,4 @@
+#include <numeric>
 #include "algo.h"
 
 using namespace lc;
