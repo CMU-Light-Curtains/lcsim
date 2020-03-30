@@ -356,6 +356,7 @@ class LightCurtain(object):
             datum.imgh = self.camera_data[datum.camera_name]["height"]
             datum.imgw = self.camera_data[datum.camera_name]["width"]
             datum.hit_mode = 1
+            datum.hit_noise = 0.01
             self.c_datums.append(datum)
 
         # Set

@@ -136,6 +136,7 @@ PYBIND11_MODULE(pylc_lib, m) {
             .def_readwrite("hit_std", &Datum::hit_std)
             .def_readwrite("hit_pow", &Datum::hit_pow)
             .def_readwrite("hit_mode", &Datum::hit_mode)
+            .def_readwrite("hit_noise", &Datum::hit_noise)
             ;
 
     // Input Object

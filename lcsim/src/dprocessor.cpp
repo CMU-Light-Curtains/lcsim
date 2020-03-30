@@ -3,6 +3,8 @@
 using namespace lc;
 
 DatumProcessor::DatumProcessor(){
+    std::random_device rd;
+    gen_ = std::mt19937(rd());
 }
 
 DatumProcessor::~DatumProcessor(){
@@ -126,6 +128,9 @@ void DatumProcessor::createNormalMap(std::shared_ptr<Datum>& datum){
 
     // Calculate Hit Space
     datum->hit_sample = generateDepthHitSample(datum->hit_N, datum->hit_std, datum->hit_pow);
+
+    // Calculate Hit Dist
+    datum->hit_dist = std::normal_distribution<float>(0., datum->hit_noise);
 
     // K'p to compute camera ray - https://nghiaho.com/?page_id=363
     // But what about the distortion param
@@ -930,10 +935,15 @@ Eigen::VectorXf DatumProcessor::generateDepthHitSample(int N, float sig, float p
     return y0;
 }
 
+float clip(float n, float lower, float upper) {
+    return std::max(lower, std::min(n, upper));
+}
+
 void DatumProcessor::computeDepthHits(std::pair<cv::Mat,cv::Mat>& surface_data, const cv::Mat& depth_img, const Datum& cam_data){
     int N = cam_data.hit_N;
     Eigen::VectorXf dhsample = cam_data.hit_sample;
     int mode = cam_data.hit_mode;
+    std::normal_distribution<float> dist = cam_data.hit_dist;
 
     cv::Mat& surface_pts = surface_data.first;
     cv::Mat& surface_unc = surface_data.second;
@@ -950,14 +960,15 @@ void DatumProcessor::computeDepthHits(std::pair<cv::Mat,cv::Mat>& surface_data, 
             if(std::isnan(zval)) continue;
             float surface_range = sqrt(coord3D(0)*coord3D(0) + coord3D(1)*coord3D(1) + coord3D(2)*coord3D(2));
             float depth_range = zval/cam_data.ztoramap.at<float>(v,u);
+            float intensity = 0.; // 0 to 1
 
             if(mode == 0)
             {
                 float error = fabs(depth_range - surface_range);
                 float color = 0;
-                if(error >= 0) color = 255. - 255.*(error/(unc/2.));
+                if(error >= 0) color = 1. - 1.*(error/(unc/2.));
                 //(error/unc)
-                if(error < unc/2.) coord3D[3] = int(color); // Check this with joe
+                if(error < unc/2.) intensity = color; // Check this with joe
             }
             else if(mode == 1)
             {
@@ -967,9 +978,16 @@ void DatumProcessor::computeDepthHits(std::pair<cv::Mat,cv::Mat>& surface_data, 
                 int index = (int)(((scale + 1.)/2.)*(N-1));
                 //if(index > dhsample.size()) throw std::runtime_error("Error");
                 //if(index < 0 || index > 999) throw std::runtime_error("Error");
-                coord3D[3] = (int)(255*dhsample(index));
+                intensity = dhsample(index);
             }
 
+            if(cam_data.hit_noise)
+            {
+                float inoise = dist(gen_);
+                intensity += inoise;
+                intensity = clip(intensity, 0., 1.);
+            }
+            coord3D[3] = (int)(255*intensity);
         }
     }
 }

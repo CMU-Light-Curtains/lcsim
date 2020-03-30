@@ -5,6 +5,8 @@
 #include <iostream>
 #include <common.h>
 #include <algo.h>
+#include <random>
+#include <algorithm>
 
 namespace lc{
 
@@ -13,6 +15,7 @@ private:
     bool set = false;
     DatumVector c_datums_, l_datums_;
     std::map<std::string, int> cam_mapping_;
+    std::mt19937 gen_;
 
 public:
     DatumProcessor();

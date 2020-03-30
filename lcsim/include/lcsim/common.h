@@ -13,6 +13,7 @@
 #include <chrono>
 #include <memory>
 #include <util.h>
+#include <random>
 #ifdef ROS
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -110,6 +111,7 @@ public:
     int hit_N = 1000;
     float hit_std = 0.3;
     float hit_pow = 2.;
+    float hit_noise = 0.;
 
     // Camera Params
     std::string type;
@@ -128,6 +130,7 @@ public:
     int imgh, imgw;
     float limit;
     Eigen::VectorXf hit_sample;
+    std::normal_distribution<float> hit_dist;
 
     // Pre Calculated
     float t_max;
