@@ -72,7 +72,6 @@ void processPointsJoint(std::shared_ptr<DatumProcessor>& datumProcessor, std::ve
             pcl::PointCloud<pcl::PointXYZRGB> temp_cloud;
             Eigen::MatrixXf cam_to_world = datumProcessor->getCDatum(input->camera_name)->cam_to_world;
             pcl::transformPointCloud(combined_cloud, temp_cloud, cam_to_world);
-            std::cout << cam_to_world << std::endl;
             full_cloud += temp_cloud;
         }
 
@@ -89,6 +88,16 @@ void processPointsJoint(std::shared_ptr<DatumProcessor>& datumProcessor, std::ve
         }
         full_cloud = full_cloud_temp;
 
+        Eigen::MatrixXf full_cloud_eig;
+        full_cloud_eig.resize(full_cloud.size(), 4);
+        for(auto i=0; i<full_cloud.size(); i++){
+            const pcl::PointXYZRGB& p = full_cloud[i];
+            full_cloud_eig(i,0) = p.x;
+            full_cloud_eig(i,1) = p.y;
+            full_cloud_eig(i,2) = p.z;
+            full_cloud_eig(i,3) = p.g;
+        }
+        output->full_cloud_eig = full_cloud_eig;
 
         #ifdef ROS
         pcl::toROSMsg(full_cloud, output->full_cloud);
@@ -123,6 +132,10 @@ PYBIND11_MODULE(pylc_lib, m) {
             .def_readwrite("divergence", &Datum::divergence)
             .def_readwrite("laser_limit", &Datum::laser_limit)
             .def_readwrite("laser_timestep", &Datum::laser_timestep)
+            .def_readwrite("hit_N", &Datum::hit_N)
+            .def_readwrite("hit_std", &Datum::hit_std)
+            .def_readwrite("hit_pow", &Datum::hit_pow)
+            .def_readwrite("hit_mode", &Datum::hit_mode)
             ;
 
     // Input Object
@@ -150,6 +163,7 @@ PYBIND11_MODULE(pylc_lib, m) {
             .def_readwrite("spline", &Output::spline)
             .def_readwrite("output_pts_set", &Output::output_pts_set)
             .def_readwrite("spline_set", &Output::spline_set)
+            .def_readwrite("full_cloud_eig", &Output::full_cloud_eig)
             #ifdef ROS
             .def_readwrite("full_cloud", &Output::full_cloud)
             #endif

@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <common.h>
+#include <algo.h>
 
 namespace lc{
 
@@ -35,6 +36,8 @@ public:
 
     void processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, pcl::PointCloud<pcl::PointXYZRGB>& cloud, bool compute_cloud=true);
     void processTest(Eigen::MatrixXf& input_pts, std::string cam_name, std::string laser_name, std::shared_ptr<Output>& output, int mode);
+
+    Eigen::VectorXf generateDepthHitSample(int N, float sig, float power);
 
 };
 

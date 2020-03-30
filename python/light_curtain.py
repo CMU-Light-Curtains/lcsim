@@ -92,7 +92,13 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 tkill = False
-class CurtainOpt(object):
+class LightCurtain(object):
+
+    def get_flat(self, z):
+        points = []
+        for x in np.arange(-5., 5., 0.01):
+            points.append([x, 0, z, 1])
+        return np.array(points).astype(np.float32)
 
     def get_arc(self, r):
         #arc_curtain = CurtainMaker::makeCircleCurtain(Point2D(0,0),arc_radius*2,-M_PI_2,M_PI_2);
@@ -349,6 +355,7 @@ class CurtainOpt(object):
             datum.distortion = self.camera_data[datum.camera_name]["distortion"]
             datum.imgh = self.camera_data[datum.camera_name]["height"]
             datum.imgw = self.camera_data[datum.camera_name]["width"]
+            datum.hit_mode = 1
             self.c_datums.append(datum)
 
         # Set
@@ -418,7 +425,7 @@ if __name__ == "__main__":
     rosmode = True
     from sensor_msgs.msg import PointCloud2
     if rosmode: rospy.init_node('opt', anonymous=True)
-    co = CurtainOpt(rosmode)
+    co = LightCurtain(rosmode)
     #co.load_data(params, sensor_setup)
     co.load_data_fromfile(CONFIG_FILE, SENSOR_SETUP)
 

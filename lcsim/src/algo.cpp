@@ -671,3 +671,11 @@ Eigen::MatrixXf Algo::solveT(const std::shared_ptr<SplineParamsVec>& splineParam
     }
     return outputs;
 }
+
+Eigen::VectorXf Algo::gaussian(const Eigen::VectorXf& x, float mu, float sig, float power){
+    Eigen::VectorXf a = Eigen::exp(-Eigen::pow(Eigen::abs(x.array() - mu), power) / (2 * pow(sig, power)));
+    float maxv = a.maxCoeff();
+    float minv = a.minCoeff();
+    a = (a.array() - minv)/(maxv - minv);
+    return a;
+}

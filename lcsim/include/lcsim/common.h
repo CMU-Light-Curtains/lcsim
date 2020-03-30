@@ -106,6 +106,12 @@ public:
     float laser_timestep = 1.5e-5;
 
     // Camera Params
+    int hit_mode = 0;
+    int hit_N = 1000;
+    float hit_std = 0.3;
+    float hit_pow = 2.;
+
+    // Camera Params
     std::string type;
     std::string camera_name;
     std::string laser_name;
@@ -121,6 +127,7 @@ public:
     cv::Mat distortion;
     int imgh, imgw;
     float limit;
+    Eigen::VectorXf hit_sample;
 
     // Pre Calculated
     float t_max;

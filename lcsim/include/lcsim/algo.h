@@ -29,6 +29,7 @@ public:
     static float squaredSum(std::vector<float>& x);
     static std::vector<float> arange(float start, float stop, float step = 1, bool include=false);
     static std::vector<float> linspace(float a, float b, size_t N);
+    static Eigen::VectorXf gaussian(const Eigen::VectorXf& x, float mu, float sig, float power=2.);
 
     static void setCol(Eigen::MatrixXf& matrix, int colnum, float val);
     static void eigenXSort(Eigen::MatrixXf& matrix);
