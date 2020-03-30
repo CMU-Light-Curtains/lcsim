@@ -3,6 +3,9 @@ project(lcsim)
 
 set (CMAKE_CXX_STANDARD 11)
 
+find_package(PythonLibs 3)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
