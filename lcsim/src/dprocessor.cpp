@@ -10,7 +10,7 @@ DatumProcessor::DatumProcessor(){
 DatumProcessor::~DatumProcessor(){
 }
 
-const std::shared_ptr<Datum>& DatumProcessor::getCDatum(std::string camera_name){
+const std::shared_ptr<Datum> DatumProcessor::getCDatum(std::string camera_name){
     return c_datums_[cam_mapping_[camera_name]];
 }
 
