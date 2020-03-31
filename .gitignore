@@ -127,6 +127,7 @@ build*
 .build*
 *cmake_build
 *cmake-build-debug
+*cmake-build-release
 distribute/*
 python/caffe/proto/
 
