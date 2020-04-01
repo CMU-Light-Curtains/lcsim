@@ -207,7 +207,7 @@ PYBIND11_MODULE(pylc_lib, m) {
     m.def("processPointsJoint", &processPointsJoint, "processPointsJoint");
     m.def("fitBSpline", &Algo::fitBSpline, "fitBSpline");
     m.def("solveT", &Algo::solveT, "solveT");
-
+    m.def("generateCameraAngles", &Algo::generateCameraAngles, "generateCameraAngles");
 
     #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

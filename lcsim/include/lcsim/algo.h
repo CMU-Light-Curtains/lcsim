@@ -45,6 +45,8 @@ public:
     static Eigen::MatrixXf fitBSpline(const Eigen::MatrixXf& input_pts_x, std::shared_ptr<SplineParamsVec>& splineParamsVec, bool computeCurve=true);
     static Eigen::MatrixXf solveT(const std::shared_ptr<SplineParamsVec>& splineParamsVec, Eigen::MatrixXf inputPts);
 
+    static std::vector<float> generateCameraAngles(const cv::Mat& K, const cv::Mat& d, int imgw, int imgh);
+
 };
 
 }

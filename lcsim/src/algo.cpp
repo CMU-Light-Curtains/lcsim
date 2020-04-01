@@ -680,3 +680,62 @@ Eigen::VectorXf Algo::gaussian(const Eigen::VectorXf& x, float mu, float sig, fl
     a = (a.array() - minv)/(maxv - minv);
     return a;
 }
+
+std::vector<cv::Point2f> getImageCoordinates(int imgh, int imgw) {
+    std::vector<cv::Point2f> img_coords;
+    for (int i = 0; i < imgw; i++)
+    {
+        for (int j = 0; j < imgh; j++) {
+            cv::Point2f pt_tmp(i+1,j+1);
+            img_coords.push_back(pt_tmp);
+        }
+    }
+    return img_coords;
+}
+
+std::vector<float> Algo::generateCameraAngles(const cv::Mat& K, const cv::Mat& d, int imgw, int imgh){
+    std::vector<cv::Point2f> img_coords;
+    std::vector<cv::Point2f> norm_coords(imgh * imgw);
+    img_coords = getImageCoordinates(imgh, imgw);
+
+    cv::Mat nmap;
+    cv::Mat midrays[3];
+    nmap = cv::Mat(imgh, imgw, CV_32FC3);
+
+    cv::Mat KK_;//(KK().rows(), KK().cols(), CV_32FC1, KK().data());
+    cv::Mat Kd_;//(Kd().rows(), Kd().cols(), CV_32FC1, Kd().data());
+    KK_ = K;
+    Kd_ = d;
+
+    cv::undistortPoints(img_coords, norm_coords, KK_, Kd_);
+
+    for (int i = 0; i < imgw; i++)
+    {
+        for (int j = 0; j < imgh; j++)
+        {
+            int pix_num = i*imgh+j;
+            float x_dir = norm_coords[pix_num].x;
+            float y_dir = norm_coords[pix_num].y;
+            float z_dir = 1.0f;
+            float mag = sqrt(x_dir*x_dir + y_dir*y_dir + z_dir*z_dir);
+            cv::Vec3f pix_ray = cv::Vec3f(x_dir/mag,y_dir/mag,z_dir/mag);
+            cv::Vec3f pix_ray_nn = cv::Vec3f(x_dir,y_dir,z_dir);
+            nmap.at<cv::Vec3f>(j,i) = pix_ray;
+        }
+    }
+
+    // Split midrays into 3 channels, x(0), y(1), z(2)
+    split(nmap.row(imgh/2-1).clone(),midrays);
+
+    // Compute Valid Angles (If we compute design points with these theta, they are guaranteed to lie on ray)
+    std::vector<float> valid_angles;
+    for(int i=0; i<midrays[0].size().width; i++){
+        float x = midrays[0].at<float>(0,i);
+        float y = midrays[1].at<float>(0,i);
+        float z = midrays[2].at<float>(0,i);
+        float theta = -((atan2f(z, x) * 180 / M_PI) - 90);
+        valid_angles.emplace_back(theta);
+    }
+
+    return valid_angles;
+}
