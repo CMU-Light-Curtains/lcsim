@@ -216,9 +216,18 @@ PYBIND11_MODULE(pylc_lib, m) {
             .def_readonly("kj", &Node::kj)
             ;
 
+    py::class_<Interpolator, std::shared_ptr<Interpolator>>(m, "Interpolator");
+
+    py::class_<CartesianNNInterpolator, Interpolator, std::shared_ptr<CartesianNNInterpolator>>(m, "CartesianNNInterpolator")
+            .def(py::init<int, int, float, float, float, float> ())
+            ;
+
+    py::class_<PolarIdentityInterpolator, Interpolator, std::shared_ptr<PolarIdentityInterpolator>>(m, "PolarIdentityInterpolator")
+            .def(py::init<int, int> ())
+            ;
+
     py::class_<Planner, std::shared_ptr<Planner>>(m, "Planner")
-            .def(py::init<std::shared_ptr<DatumProcessor>, bool> ())
-            .def("constructGraph", &Planner::constructGraph)
+            .def(py::init<std::shared_ptr<DatumProcessor>, const std::vector<float>&, std::shared_ptr<Interpolator>, bool> ())
             .def("getGraphForVis", &Planner::getVectorizedGraph)
             .def("optimizedDesignPts", &Planner::optimizedDesignPts)
             ;
