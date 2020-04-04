@@ -46,8 +46,33 @@ public:
 
 };
 
-class Planner {
+class Interpolator {
 public:
+    virtual std::pair<int, int> getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const = 0;
+    virtual bool isUmapShapeValid(int nrows, int ncols) const = 0;
+};
+
+class CartesianNNInterpolator : public Interpolator {
+private:
+    int umap_w_, umap_h_;
+    float x_min_, x_max_, z_min_, z_max_;
+public:
+    CartesianNNInterpolator(int umap_w, int umap_h, float x_min, float x_max, float z_min, float z_max);
+    std::pair<int, int> getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const override;
+    bool isUmapShapeValid(int nrows, int ncols) const override;
+};
+
+class PolarIdentityInterpolator : public Interpolator {
+private:
+    int num_camera_rays_, num_ranges_;
+public:
+    PolarIdentityInterpolator(int num_camera_rays, int num_ranges);
+    std::pair<int, int> getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const override;
+    bool isUmapShapeValid(int nrows, int ncols) const override;
+};
+
+class Planner {
+private:
     bool debug_;
     std::shared_ptr<DatumProcessor> datumProcessor_;
     std::vector<float> camera_angles_;
@@ -56,23 +81,22 @@ public:
 
     Node graph_[MAX_RAYS][MAX_NODES_PER_RAY];
     Trajectory dp_[MAX_RAYS][MAX_NODES_PER_RAY];
-    int umap_w_, umap_h_;
-    float x_min_, x_max_, z_min_, z_max_;
-    int camera_rays_;
-    int nodes_per_ray_;
+    const std::vector<float> ranges_;
+    std::shared_ptr<Interpolator> interpolator_;
+    int num_camera_rays_, num_nodes_per_ray_;
 
-    Planner(std::shared_ptr<DatumProcessor> datumProcessor, bool debug);
+    void constructGraph();
+
+public:
+    Planner(std::shared_ptr<DatumProcessor> datumProcessor,
+            const std::vector<float>& ranges,
+            std::shared_ptr<Interpolator> interpolator,
+            bool debug);
     ~Planner();
-
-    void constructGraph(int umap_w_, int umap_h_,
-                        float x_min_, float x_max_, float z_min_, float z_max_,
-                        int nodes_per_ray_);
 
     std::vector<std::pair<float, float>> optimizedDesignPts(Eigen::MatrixXf umap);
 
     std::vector<std::vector<std::pair<Node, int>>> getVectorizedGraph();
-
-    std::pair<int, int> nearestNeighborIndex(float x, float z);
 };
 
 }
