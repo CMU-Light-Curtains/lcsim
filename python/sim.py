@@ -1,6 +1,7 @@
 import os
 import sys
 import math
+import numpy as np
 
 from transformations import euler_matrix
 
@@ -39,7 +40,7 @@ class LCDevice:
         #       - This is given by roll, pitch, yaw of -90, 0, -90.
         #     - laser lies 20cm to the right of camera (0.2 along velo's -Y)
         self.LASER_PARAMS = dict(
-            x=0.0, y=-0.2, z=0.0, # 20cm to right of camera
+            x=0.0, y=-0.2, z=0.0,  # 20cm to right of camera
             roll=-90.0, pitch=0.0, yaw=-90.0,
             fov=80,
             galvo_m=-2.2450289e+01,
@@ -184,8 +185,8 @@ class LCDevice:
 
         return output_image
 
+
 if __name__ == '__main__':
-    import numpy as  np
     import matplotlib; matplotlib.use('Qt4Agg')
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import

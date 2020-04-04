@@ -8,6 +8,7 @@
 #include <dprocessor.h>
 #include <algo.h>
 #include <fitting.h>
+#include <planning.h>
 
 using namespace lc;
 
@@ -202,6 +203,33 @@ PYBIND11_MODULE(pylc_lib, m) {
             .def("curtainSplitting", &Fitting::curtainSplitting)
             .def("curtainNodes", &Fitting::curtainNodes)
             .def("splineToAngles", &Fitting::splineToAngles)
+            ;
+
+    // Planner.
+    py::class_<Node, std::shared_ptr<Node>>(m, "Node")
+            .def_readonly("x", &Node::x)
+            .def_readonly("z", &Node::z)
+            .def_readonly("r", &Node::r)
+            .def_readonly("theta_cam", &Node::theta_cam)
+            .def_readonly("theta_las", &Node::theta_las)
+            .def_readonly("ki", &Node::ki)
+            .def_readonly("kj", &Node::kj)
+            ;
+
+    py::class_<Interpolator, std::shared_ptr<Interpolator>>(m, "Interpolator");
+
+    py::class_<CartesianNNInterpolator, Interpolator, std::shared_ptr<CartesianNNInterpolator>>(m, "CartesianNNInterpolator")
+            .def(py::init<int, int, float, float, float, float> ())
+            ;
+
+    py::class_<PolarIdentityInterpolator, Interpolator, std::shared_ptr<PolarIdentityInterpolator>>(m, "PolarIdentityInterpolator")
+            .def(py::init<int, int> ())
+            ;
+
+    py::class_<Planner, std::shared_ptr<Planner>>(m, "Planner")
+            .def(py::init<std::shared_ptr<DatumProcessor>, const std::vector<float>&, std::shared_ptr<Interpolator>, bool> ())
+            .def("getGraphForVis", &Planner::getVectorizedGraph)
+            .def("optimizedDesignPts", &Planner::optimizedDesignPts)
             ;
 
     m.def("processPointsJoint", &processPointsJoint, "processPointsJoint");
