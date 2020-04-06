@@ -73,7 +73,7 @@ class Planner(object):
             plt.show()
 
             mean_connectivity = nEdges[:, :-1].mean() / nEdges.shape[0] * 100
-            print("PYLC_PLANNER: mean connectivity across adjacent rays: " + str(mean_connectivity))
+            print("PYLC_PLANNER: mean connectivity across adjacent rays: {:.2f}%".format(mean_connectivity))
 
     def _visualize_curtain_xy(self, umap, design_points):
         """
@@ -179,6 +179,7 @@ class PlannerRT(Planner):
         """
         if self._debug:
             self._visualize_graph(umap)
+
         design_points = self._planner.optimizedDesignPts(umap)
         design_points = np.array(design_points)
 
