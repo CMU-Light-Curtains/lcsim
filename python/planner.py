@@ -9,7 +9,7 @@ import pylc_lib
 from sim import LCDevice
 
 
-class Planner:
+class Planner(object):
     def __init__(self, lc_device, debug=False):
         self._lc_device = lc_device
         self._debug = debug
@@ -72,8 +72,8 @@ class Planner:
             plt.title("PYLC_PLANNER: Camera Ray Points w/ Interpolated Reward", fontsize='x-large')
             plt.show()
 
-            mean_connectivity = f"{nEdges[:, :-1].mean() / nEdges.shape[0] * 100:.2f}%"
-            print(f"PYLC_PLANNER: mean connectivity across adjacent rays: {mean_connectivity}")
+            mean_connectivity = nEdges[:, :-1].mean() / nEdges.shape[0] * 100
+            print("PYLC_PLANNER: mean connectivity across adjacent rays: " + str(mean_connectivity))
 
     def _visualize_curtain_xy(self, umap, design_points):
         """
@@ -179,7 +179,6 @@ class PlannerRT(Planner):
         """
         if self._debug:
             self._visualize_graph(umap)
-
         design_points = self._planner.optimizedDesignPts(umap)
         design_points = np.array(design_points)
 
@@ -210,7 +209,7 @@ def test_xy():
 
     planner = PlannerXY(lc_device, debug=True)
 
-    cmap = np.load("/home/sancha/repos/lcsim/python/example/confidence_map.npy")
+    cmap = np.load("example/confidence_map.npy")
     planner.get_design_points(cmap)
 
 
@@ -228,7 +227,7 @@ def test_rt():
         }
     )
 
-    dpv = np.load("/home/sancha/repos/lcsim/python/example/dpv.npy", allow_pickle=True, encoding='bytes')[()]
+    dpv = np.load("example/dpv.npy", allow_pickle=True, encoding='bytes')[()]
     ranges = dpv[b'r_candi']; assert ranges.shape == (128,)  # (128,)
     umap = dpv[b'field'].numpy(); assert umap.shape == (128, 400)  # (128, 400)
     cam_w, cam_h = dpv[b'size']

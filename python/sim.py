@@ -64,7 +64,9 @@ class LCDevice:
             limit=1.0,
             distortion=[-0.033918, 0.027494, -0.001691, -0.001078, 0.000000],
             fov=80,
-            matrix=None
+            matrix=None,
+            hit_mode = 0,
+            hit_noise = 0.
         )
         # Merge with defaults.
         if CAMERA_PARAMS is not None:
@@ -110,6 +112,9 @@ class LCDevice:
         c_datum.distortion = np.array(self.CAMERA_PARAMS['distortion'], dtype=np.float32).reshape(1,5)
         c_datum.imgh = self.CAMERA_PARAMS['height']
         c_datum.imgw = self.CAMERA_PARAMS['width']
+
+        c_datum.hit_mode = self.CAMERA_PARAMS['hit_mode']
+        c_datum.hit_noise = self.CAMERA_PARAMS['hit_noise']
 
         self.datum_processor = pylc_lib.DatumProcessor()
         self.datum_processor.setSensors([c_datum], [l_datum])
@@ -181,7 +186,7 @@ class LCDevice:
         assert len(pylc_output.images_multi) == 1
         assert len(pylc_output.images_multi[0]) == 1
         # np.ndarray, dtype=np.float32, shape=(512, 512, 4)
-        output_image = pylc_output.images_multi[0][0]
+        output_image = pylc_output.images_multi[0][0].copy()
 
         return output_image
 
