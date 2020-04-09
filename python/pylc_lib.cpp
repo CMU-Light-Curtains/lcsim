@@ -9,6 +9,7 @@
 #include <algo.h>
 #include <fitting.h>
 #include <planning.h>
+#include <depth.h>
 
 using namespace lc;
 
@@ -236,6 +237,7 @@ PYBIND11_MODULE(pylc_lib, m) {
     m.def("fitBSpline", &Algo::fitBSpline, "fitBSpline");
     m.def("solveT", &Algo::solveT, "solveT");
     m.def("generateCameraAngles", &Algo::generateCameraAngles, "generateCameraAngles");
+    m.def("transformPoints", &Depth::transformPoints, "transformPoints");
 
     #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;
