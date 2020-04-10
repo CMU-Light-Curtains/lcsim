@@ -101,8 +101,8 @@ Eigen::MatrixXf Depth::generateDepth(const Eigen::MatrixXf &lidardata, const Eig
     // Z Buffer assignment
     Eigen::MatrixXf dmap_raw = Eigen::MatrixXf::Zero(height, width);
     for(int i=0; i<lidardata_cam_proj.rows(); i++){
-        int u = (int)(lidardata_cam_proj(i,0) + 0.5);
-        int v = (int)(lidardata_cam_proj(i,1) + 0.5);
+        int u = (int)(lidardata_cam_proj(i,0) - 0.5);
+        int v = (int)(lidardata_cam_proj(i,1) - 0.5);
         if(u < 0 || u >= width || v < 0 || v >= height) continue;
         float z = lidardata_cam_proj(i,2);
         float current_z = dmap_raw(v,u);
@@ -140,7 +140,7 @@ Eigen::MatrixXf Depth::generateDepth(const Eigen::MatrixXf &lidardata, const Eig
     return dmap_cleaned;
 }
 
-std::vector<Eigen::MatrixXf> Depth::transformPoints(const Eigen::MatrixXf &lidardata, const Eigen::MatrixXf &intr_raw, const Eigen::MatrixXf &M_lidar2cam, int width, int height, std::map<std::string, float>& params) {
+std::vector<cv::Mat> Depth::transformPoints(const Eigen::MatrixXf &lidardata, const Eigen::MatrixXf &intr_raw, const Eigen::MatrixXf &M_lidar2cam, int width, int height, std::map<std::string, float>& params) {
     int filtering = (int)(params["filtering"]);
 
     // Extract Intensity and Points
@@ -149,7 +149,7 @@ std::vector<Eigen::MatrixXf> Depth::transformPoints(const Eigen::MatrixXf &lidar
     Eigen::VectorXf lidardata_intensity = lidardata.col(3);
 
     // Transform to Camera Frame
-    Eigen::MatrixXf lidardata_cam = (M_lidar2cam * lidardata.transpose()).transpose();
+    Eigen::MatrixXf lidardata_cam = (M_lidar2cam * lidardata_points.transpose()).transpose();
 
     // Project and Generate Pixels
     Eigen::MatrixXf lidardata_cam_proj = (intr_raw * lidardata_cam.transpose()).transpose();
@@ -157,20 +157,18 @@ std::vector<Eigen::MatrixXf> Depth::transformPoints(const Eigen::MatrixXf &lidar
     lidardata_cam_proj.col(1) = lidardata_cam_proj.col(1).cwiseQuotient(lidardata_cam_proj.col(2));
     lidardata_cam_proj.col(2) = lidardata_cam.col(2);
 
-    std::cout << lidardata_cam_proj << std::endl;
-    std::cout << "--" << std::endl;
-
     // Z Buffer assignment
     Eigen::MatrixXf dmap_raw = Eigen::MatrixXf::Zero(height, width);
     Eigen::MatrixXf imap_raw = Eigen::MatrixXf::Zero(height, width);
     for(int i=0; i<lidardata_cam_proj.rows(); i++){
-        int u = (int)(lidardata_cam_proj(i,0) + 0.5);
-        int v = (int)(lidardata_cam_proj(i,1) + 0.5);
+        int u = (int)(lidardata_cam_proj(i,0) - 0.5);
+        int v = (int)(lidardata_cam_proj(i,1) - 0.5);
         if(u < 0 || u >= width || v < 0 || v >= height) continue;
         float z = lidardata_cam_proj(i,2);
         if(std::isnan(z)) continue;
         float intensity = lidardata_intensity(i);
         float current_z = dmap_raw(v,u);
+        //if(intensity == 0 || std::isnan(intensity)) continue;
         if((z < current_z) || (current_z == 0)) {
             dmap_raw(v, u) = z;
             imap_raw(v, u) = intensity;
@@ -180,30 +178,40 @@ std::vector<Eigen::MatrixXf> Depth::transformPoints(const Eigen::MatrixXf &lidar
     // Filtering
     Eigen::MatrixXf dmap_mask = Eigen::MatrixXf::Ones(height, width);
     int offset = filtering;
-    for(int v=offset; v<height-offset-1; v++){
-        for(int u=offset; u<width-offset-1; u++){
-            float z = dmap_raw(v,u);
-            bool bad = false;
+    if(offset) {
+        for (int v = offset; v < height - offset - 1; v++) {
+            for (int u = offset; u < width - offset - 1; u++) {
+                float z = dmap_raw(v, u);
+                bool bad = false;
 
-            // Check neighbours
-            for(int vv=v-offset; vv<v+offset+1; vv++){
-                for(int uu=u-offset; uu<u+offset+1; uu++){
-                    if(vv == v && uu == u) continue;
-                    float zn = dmap_raw(vv,uu);
-                    if(zn == 0) continue;
-                    if((zn-z) < -1){
-                        bad = true;
-                        break;
+                // Check neighbours
+                for (int vv = v - offset; vv < v + offset + 1; vv++) {
+                    for (int uu = u - offset; uu < u + offset + 1; uu++) {
+                        if (vv == v && uu == u) continue;
+                        float zn = dmap_raw(vv, uu);
+                        if (zn == 0) continue;
+                        if ((zn - z) < -1) {
+                            bad = true;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if(bad){
-                dmap_mask(v,u) = 0;
+                if (bad) {
+                    dmap_mask(v, u) = 0;
+                }
             }
         }
     }
 
-    std::vector<Eigen::MatrixXf> outputs = {dmap_raw.cwiseProduct(dmap_mask), imap_raw.cwiseProduct(dmap_mask)};
+
+    // Apply mask
+    dmap_raw = dmap_raw.cwiseProduct(dmap_mask);
+    imap_raw = imap_raw.cwiseProduct(dmap_mask);
+    cv::Mat dmap_raw_cv, imap_raw_cv;
+    cv::eigen2cv(dmap_raw, dmap_raw_cv);
+    cv::eigen2cv(imap_raw, imap_raw_cv);
+
+    std::vector<cv::Mat> outputs = {dmap_raw_cv, imap_raw_cv};
     return outputs;
 }

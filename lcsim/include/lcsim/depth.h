@@ -9,6 +9,7 @@
 #include <opencv/cxeigen.hpp>
 #include <chrono>
 #include <memory>
+#include <opencv2/core/eigen.hpp>
 
 namespace lc{
 
@@ -20,7 +21,7 @@ public:
                                    const Eigen::MatrixXf& M_lidar2cam, int width, int height,
                                    std::map<std::string, float>& params);
 
-    static std::vector<Eigen::MatrixXf> transformPoints(const Eigen::MatrixXf& lidardata, const Eigen::MatrixXf& intr_raw,
+    static std::vector<cv::Mat> transformPoints(const Eigen::MatrixXf& lidardata, const Eigen::MatrixXf& intr_raw,
                                            const Eigen::MatrixXf& M_lidar2cam, int width, int height,
                                            std::map<std::string, float>& params);
 };
