@@ -23,7 +23,7 @@ void processPointsJoint(std::shared_ptr<DatumProcessor>& datumProcessor, std::ve
     // Resize
     output->clouds.resize(soi.size());
     output->images_multi.resize(soi.size());
-    output->unc_multi.resize(soi.size());
+    output->thickness_multi.resize(soi.size());
 
     // Resort
     std::vector<Sorted> sortedVec;
@@ -49,16 +49,16 @@ void processPointsJoint(std::shared_ptr<DatumProcessor>& datumProcessor, std::ve
 
         // Resize local
         output->images_multi[i].resize(input->design_pts_multi.size());
-        output->unc_multi[i].resize(input->design_pts_multi.size());
+        output->thickness_multi[i].resize(input->design_pts_multi.size());
 
         // Process
         pcl::PointCloud<pcl::PointXYZRGB> combined_cloud;
         for(int j=0; j<input->design_pts_multi.size(); j++){
             const Eigen::MatrixXf& m = input->design_pts_multi[j];
             cv::Mat& image = output->images_multi[i][j];
-            cv::Mat& unc = output->unc_multi[i][j];
+            cv::Mat& thickness = output->thickness_multi[i][j];
             pcl::PointCloud<pcl::PointXYZRGB> cloud;
-            datumProcessor->processPointsT(m, depth_img, sorted.camera_name, sorted.laser_name, image, unc, cloud, get_cloud);
+            datumProcessor->processPointsT(m, depth_img, sorted.camera_name, sorted.laser_name, image, thickness, cloud, get_cloud);
             combined_cloud += cloud;
         }
 
@@ -161,7 +161,7 @@ PYBIND11_MODULE(pylc_lib, m) {
             .def(py::init<>())
             .def_readwrite("clouds", &Output::clouds)
             .def_readwrite("images_multi", &Output::images_multi)
-            .def_readwrite("unc_multi", &Output::unc_multi)
+            .def_readwrite("thickness_multi", &Output::thickness_multi)
             .def_readwrite("output_pts", &Output::output_pts)
             .def_readwrite("laser_rays", &Output::laser_rays)
             .def_readwrite("angles", &Output::angles)

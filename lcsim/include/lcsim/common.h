@@ -79,7 +79,7 @@ class Output{
 public:
     std::vector<Eigen::Matrix<float, Eigen::Dynamic, 4>> clouds;
     std::vector<std::vector<cv::Mat>> images_multi;
-    std::vector<std::vector<cv::Mat>> unc_multi;
+    std::vector<std::vector<cv::Mat>> thickness_multi;
     Eigen::MatrixXf full_cloud_eig;
 
     Eigen::MatrixXf output_pts, laser_rays, spline;

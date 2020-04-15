@@ -992,7 +992,7 @@ void DatumProcessor::computeDepthHits(std::pair<cv::Mat,cv::Mat>& surface_data, 
     }
 }
 
-void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, cv::Mat& unc, pcl::PointCloud<pcl::PointXYZRGB>& cloud, bool compute_cloud){
+void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::Mat& depth_img, std::string cam_name, std::string laser_name, cv::Mat& image, cv::Mat& thickness, pcl::PointCloud<pcl::PointXYZRGB>& cloud, bool compute_cloud){
     bool debug = false;
     auto begin = std::chrono::steady_clock::now();
     auto beginf = std::chrono::steady_clock::now();
@@ -1024,7 +1024,7 @@ void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::
     // Surface Pts
     auto surface_data = calculateSurface(design_pts, cam_data, laser_data);
     auto& surface_pts = surface_data.first;
-    auto& surface_unc = surface_data.second;
+    auto& surface_thickness = surface_data.second;
     //std::cout << "C = " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin).count() << "[µs]" << std::endl;
     //begin = std::chrono::steady_clock::now();
 
@@ -1035,7 +1035,7 @@ void DatumProcessor::processPointsT(const Eigen::MatrixXf& input_pts, const cv::
 
     // Assign
     surface_pts.copyTo(image);
-    surface_unc.copyTo(unc);
+    surface_thickness.copyTo(thickness);
 
     // Cloud Compute
     if(!compute_cloud) return;
