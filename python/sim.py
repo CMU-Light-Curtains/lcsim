@@ -162,18 +162,22 @@ class LCDevice:
 
         return TRANSFORMS
 
-    def get_return(self, np_depth_image, np_design_pts):
+    def get_return(self, np_depth_image, np_design_pts, get_unc=False):
         """
         Args:
             np_depth_image: (np.ndarray, dtype=float32, shape=(H, W))
             np_design_pts: (np.ndarray, dtype=float32, shape=(N, 2))
                            Axis 1 corresponds to x, z in LC camera frame.
+            get_unc: (Bool)
+                     Returns the uncertainity map as the 2nd output
         Returns:
             lc_output_image: (np.ndarray, dtype=float32, shape=(H, W, 4))) LC image.
                              - Channels denote (x, y, z, intensity).
                              - Pixels that aren't a part of LC return will have NaNs in one of
                                the 4 channels.
                              - Intensity ranges from 0. to 255.
+            unc_image: (np.ndarray, dtype=float32, shape=(H, W, 1))) LC image.
+                             - Channels denote (uncertainity)
         """
         pylc_input = pylc_lib.Input()
         pylc_input.camera_name = u'camera01'
@@ -199,9 +203,12 @@ class LCDevice:
         assert len(pylc_output.images_multi[0]) == 1
         # np.ndarray, dtype=np.float32, shape=(512, 512, 4)
         output_image = pylc_output.images_multi[0][0].copy()
+        unc_image = pylc_output.unc_multi[0][0].copy()
 
-        return output_image
-
+        if get_unc:
+            return output_image, unc_image
+        else:
+            return output_image
 
 if __name__ == '__main__':
     import matplotlib; matplotlib.use('Qt4Agg')
