@@ -140,7 +140,7 @@ Eigen::MatrixXf Depth::generateDepth(const Eigen::MatrixXf &lidardata, const Eig
     return dmap_cleaned;
 }
 
-std::vector<cv::Mat> Depth::transformPoints(const Eigen::MatrixXf &lidardata, const Eigen::MatrixXf &intr_raw, const Eigen::MatrixXf &M_lidar2cam, int width, int height, std::map<std::string, float>& params) {
+std::vector<cv::Mat> Depth::transformPoints(const Eigen::MatrixXf &lidardata, const Eigen::VectorXf &thickdata, const Eigen::MatrixXf &intr_raw, const Eigen::MatrixXf &M_lidar2cam, int width, int height, std::map<std::string, float>& params) {
     int filtering = (int)(params["filtering"]);
 
     // Extract Intensity and Points
@@ -160,6 +160,7 @@ std::vector<cv::Mat> Depth::transformPoints(const Eigen::MatrixXf &lidardata, co
     // Z Buffer assignment
     Eigen::MatrixXf dmap_raw = Eigen::MatrixXf::Zero(height, width);
     Eigen::MatrixXf imap_raw = Eigen::MatrixXf::Zero(height, width);
+    Eigen::MatrixXf tmap_raw = Eigen::MatrixXf::Zero(height, width);
     for(int i=0; i<lidardata_cam_proj.rows(); i++){
         int u = (int)(lidardata_cam_proj(i,0) - 0.5);
         int v = (int)(lidardata_cam_proj(i,1) - 0.5);
@@ -167,11 +168,13 @@ std::vector<cv::Mat> Depth::transformPoints(const Eigen::MatrixXf &lidardata, co
         float z = lidardata_cam_proj(i,2);
         if(std::isnan(z)) continue;
         float intensity = lidardata_intensity(i);
+        float thickness = thickdata(i);
         float current_z = dmap_raw(v,u);
         //if(intensity == 0 || std::isnan(intensity)) continue;
         if((z < current_z) || (current_z == 0)) {
             dmap_raw(v, u) = z;
             imap_raw(v, u) = intensity;
+            tmap_raw(v,u) = thickness;
         }
     }
 
@@ -208,10 +211,12 @@ std::vector<cv::Mat> Depth::transformPoints(const Eigen::MatrixXf &lidardata, co
     // Apply mask
     dmap_raw = dmap_raw.cwiseProduct(dmap_mask);
     imap_raw = imap_raw.cwiseProduct(dmap_mask);
-    cv::Mat dmap_raw_cv, imap_raw_cv;
+    tmap_raw = tmap_raw.cwiseProduct(dmap_mask);
+    cv::Mat dmap_raw_cv, imap_raw_cv, tmap_raw_cv;
     cv::eigen2cv(dmap_raw, dmap_raw_cv);
     cv::eigen2cv(imap_raw, imap_raw_cv);
+    cv::eigen2cv(tmap_raw, tmap_raw_cv);
 
-    std::vector<cv::Mat> outputs = {dmap_raw_cv, imap_raw_cv};
+    std::vector<cv::Mat> outputs = {dmap_raw_cv, imap_raw_cv, tmap_raw_cv};
     return outputs;
 }
