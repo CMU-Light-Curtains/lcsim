@@ -49,7 +49,9 @@ class LCDevice:
             thickness=0.00055,
             divergence=0.11/2.,
             laser_limit=14000,
-            laser_timestep=1.5e-5
+            laser_timestep=1.5e-5,
+            lTc=None,
+            lTw=None
         )
         # Merge with defaults.
         if LASER_PARAMS is not None:
@@ -66,7 +68,8 @@ class LCDevice:
             fov=80,
             matrix=None,
             hit_mode = 0,
-            hit_noise = 0.
+            hit_noise = 0.,
+            cTw=None,
         )
         # Merge with defaults.
         if CAMERA_PARAMS is not None:
@@ -129,39 +132,52 @@ class LCDevice:
     def _compute_transforms(self):
         TRANSFORMS = {}
 
-        TRANSFORMS['cTw'] = self._get_transform_from_xyzrpy(self.CAMERA_PARAMS['x'],
-                                                            self.CAMERA_PARAMS['y'],
-                                                            self.CAMERA_PARAMS['z'],
-                                                            self.CAMERA_PARAMS['roll'],
-                                                            self.CAMERA_PARAMS['pitch'],
-                                                            self.CAMERA_PARAMS['yaw'])
+        if self.CAMERA_PARAMS['cTw'] is not None:
+            TRANSFORMS['cTw'] = self.CAMERA_PARAMS['cTw']
+        else:
+            TRANSFORMS['cTw'] = self._get_transform_from_xyzrpy(self.CAMERA_PARAMS['x'],
+                                                                self.CAMERA_PARAMS['y'],
+                                                                self.CAMERA_PARAMS['z'],
+                                                                self.CAMERA_PARAMS['roll'],
+                                                                self.CAMERA_PARAMS['pitch'],
+                                                                self.CAMERA_PARAMS['yaw'])
         TRANSFORMS['wTc'] = np.linalg.inv(TRANSFORMS['cTw'])
 
-        TRANSFORMS['lTw'] = self._get_transform_from_xyzrpy(self.LASER_PARAMS['x'],
-                                                            self.LASER_PARAMS['y'],
-                                                            self.LASER_PARAMS['z'],
-                                                            self.LASER_PARAMS['roll'],
-                                                            self.LASER_PARAMS['pitch'],
-                                                            self.LASER_PARAMS['yaw'])
+        if self.LASER_PARAMS['lTw'] is not None:
+            TRANSFORMS['lTw'] = self.LASER_PARAMS['lTw']
+        else:
+            TRANSFORMS['lTw'] = self._get_transform_from_xyzrpy(self.LASER_PARAMS['x'],
+                                                                self.LASER_PARAMS['y'],
+                                                                self.LASER_PARAMS['z'],
+                                                                self.LASER_PARAMS['roll'],
+                                                                self.LASER_PARAMS['pitch'],
+                                                                self.LASER_PARAMS['yaw'])
         TRANSFORMS['wTl'] = np.linalg.inv(TRANSFORMS['lTw'])
 
-        TRANSFORMS['lTc'] = TRANSFORMS['wTc'].dot(TRANSFORMS['lTw'])
+        if self.LASER_PARAMS['lTc'] is not None:
+            TRANSFORMS['lTc'] = self.LASER_PARAMS['lTc']
+        else:
+            TRANSFORMS['lTc'] = TRANSFORMS['wTc'].dot(TRANSFORMS['lTw'])
         TRANSFORMS['cTl'] = np.linalg.inv(TRANSFORMS['lTc'])
 
         return TRANSFORMS
 
-    def get_return(self, np_depth_image, np_design_pts):
+    def get_return(self, np_depth_image, np_design_pts, get_thickness=False):
         """
         Args:
             np_depth_image: (np.ndarray, dtype=float32, shape=(H, W))
             np_design_pts: (np.ndarray, dtype=float32, shape=(N, 2))
                            Axis 1 corresponds to x, z in LC camera frame.
+            get_thickness: (Bool)
+                     Returns the thickness map as the 2nd output
         Returns:
             lc_output_image: (np.ndarray, dtype=float32, shape=(H, W, 4))) LC image.
                              - Channels denote (x, y, z, intensity).
                              - Pixels that aren't a part of LC return will have NaNs in one of
                                the 4 channels.
                              - Intensity ranges from 0. to 255.
+            thickness_image: (np.ndarray, dtype=float32, shape=(H, W, 1))) LC image.
+                             - Channels denote (thickness of sensing)
         """
         pylc_input = pylc_lib.Input()
         pylc_input.camera_name = u'camera01'
@@ -187,9 +203,12 @@ class LCDevice:
         assert len(pylc_output.images_multi[0]) == 1
         # np.ndarray, dtype=np.float32, shape=(512, 512, 4)
         output_image = pylc_output.images_multi[0][0].copy()
+        thickness_image = pylc_output.thickness_multi[0][0].copy()
 
-        return output_image
-
+        if get_thickness:
+            return output_image, thickness_image
+        else:
+            return output_image
 
 if __name__ == '__main__':
     import matplotlib; matplotlib.use('Qt4Agg')
