@@ -5,7 +5,7 @@ import numpy as np
 
 from transformations import euler_matrix
 
-build_dir = os.path.dirname(os.path.abspath(__file__)) + '/../build'
+build_dir = os.path.dirname(os.path.abspath(__file__)) + '/../cmake-build-release'
 sys.path.append(build_dir)  # should contain pylc_lib compiled .so file
 import pylc_lib
 

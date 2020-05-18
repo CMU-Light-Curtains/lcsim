@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-build_dir = os.path.dirname(os.path.abspath(__file__)) + '/../build'
+build_dir = os.path.dirname(os.path.abspath(__file__)) + '/../cmake-build-release'
 sys.path.append(build_dir)  # should contain pylc_lib compiled .so file
 import pylc_lib
 from sim import LCDevice
@@ -48,7 +48,7 @@ class Planner(object):
         graph = self._planner.getGraphForVis()
         graph = np.array(graph)  # (RAYS, NODES_PER_RAY, 2)
         graph = graph.transpose(1, 0, 2)  # (NODES_PER_RAY, RAYS, 2)
-        nodes = graph[:, :, 0].ravel()  # (NODES_PER_RAY, RAYS)
+        nodes = graph[:, :, 0].ravel()  # (NODES_PER_RAY * RAYS,)
         nEdges = graph[:, :, 1]  # (NODES_PER_RAY, RAYS)
 
         x = np.array([node.x for node in nodes])
@@ -93,7 +93,7 @@ class Planner(object):
         plt.scatter(design_points[:, 0], design_points[:, 1], s=1, c='w')
         plt.show()
 
-    def _visualize_curtain_rt(self, map, design_points):
+    def _visualize_curtain_rt(self, map, design_points, show=True):
         """
         Args:
             map: (np.ndarray, dtype=float32, shape=(X, Y)) map of the objective function.
@@ -101,7 +101,8 @@ class Planner(object):
         self._visualize_graph(map, show=False)
         plt.plot(design_points[:, 0], design_points[:, 1], linewidth=1, c='b')
         plt.scatter(design_points[:, 0], design_points[:, 1], s=1, c='w')
-        plt.show()
+        if show:
+            plt.show()
 
     def get_design_points(self, confidence_map):
         pass
