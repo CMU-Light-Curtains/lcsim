@@ -122,6 +122,11 @@ class LCDevice:
         self.datum_processor = pylc_lib.DatumProcessor()
         self.datum_processor.setSensors([c_datum], [l_datum])
 
+        # Angles of each camera ray, from leftmost to righmost ray.
+        # Angles are measured in degrees, with respect to the z-axis, in sorted (increasing) order.
+        # Hence, they lie in [-fov/2, fov/2].
+        self.thetas = np.array(c_datum.valid_angles, dtype=np.float32)  # degrees
+
     def _get_transform_from_xyzrpy(self, x, y, z, roll, pitch, yaw):
         # convert roll, pitch, yaw to radians.
         roll, pitch, yaw = roll * np.pi/180., pitch * np.pi/180., yaw * np.pi/180.
