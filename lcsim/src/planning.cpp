@@ -84,22 +84,25 @@ std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf
         for (int range_i = 0; range_i < num_nodes_per_ray_; range_i++) {
             Node* pNode = &(graph_[ray_i][range_i]);
 
-            // Trajectory starting from and ending at here.
-            dp_[ray_i][range_i] = Trajectory(pNode, umap);
-
-            // Select best sub-trajectory from valid neighbors.
-            for (std::pair<int, int> edge : pNode->edges) {
-                Trajectory* pSubTraj = &(dp_[edge.first][edge.second]);
-                Trajectory traj(pNode, pSubTraj, umap);
-                if (traj > dp_[ray_i][range_i])
-                    dp_[ray_i][range_i] = traj;
+            if (ray_i == num_camera_rays_ - 1) {
+                // For last ray, the trajectory starts and ends at the same node.
+                dp_[ray_i][range_i] = Trajectory(pNode, umap);
+            } else {
+                // For non-last ray, iterate over all its valid neighbors to select best sub-trajectory.
+                for (int edge_i = 0; edge_i < pNode->edges.size(); edge_i++) {
+                    std::pair<int, int>& edge = pNode->edges[edge_i];
+                    Trajectory* pSubTraj = &(dp_[edge.first][edge.second]);
+                    Trajectory traj(pNode, pSubTraj, umap);
+                    if (edge_i == 0 || traj > dp_[ray_i][range_i])
+                        dp_[ray_i][range_i] = traj;
+                }
             }
         }
     }
 
     // Select overall best trajectory.
-    Trajectory best_traj;
-    for (int range_i = 0; range_i < num_nodes_per_ray_; range_i++)
+    Trajectory best_traj = dp_[0][0];
+    for (int range_i = 1; range_i < num_nodes_per_ray_; range_i++)
         if (dp_[0][range_i] > best_traj)
             best_traj = dp_[0][range_i];
 

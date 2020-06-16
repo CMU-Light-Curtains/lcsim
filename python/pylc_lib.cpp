@@ -201,6 +201,7 @@ PYBIND11_MODULE(pylc_lib, m) {
     py::class_<DatumProcessor, std::shared_ptr<DatumProcessor>>(m, "DatumProcessor")
             .def(py::init<>())
             .def("setSensors", &DatumProcessor::setSensors)
+            .def_readwrite("warnings", &DatumProcessor::warnings)
             ;
 
     // Fitting

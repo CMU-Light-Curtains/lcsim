@@ -27,7 +27,7 @@ def compute_camera_instrics_matrix(fov_deg, w, h):
                      [0., 0., 1.]], dtype=np.float32)
 
 class LCDevice:
-    def __init__(self, LASER_PARAMS=None, CAMERA_PARAMS=None):
+    def __init__(self, LASER_PARAMS=None, CAMERA_PARAMS=None, warnings=False):
 
         # These are the defaults.
         # The extrinsics are set such that
@@ -121,6 +121,7 @@ class LCDevice:
 
         self.datum_processor = pylc_lib.DatumProcessor()
         self.datum_processor.setSensors([c_datum], [l_datum])
+        self.datum_processor.warnings = warnings
 
         # Angles of each camera ray, from leftmost to righmost ray.
         # Angles are measured in degrees, with respect to the z-axis, in sorted (increasing) order.
