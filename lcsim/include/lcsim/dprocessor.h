@@ -21,6 +21,7 @@ public:
     DatumProcessor();
     ~DatumProcessor();
 
+    bool warnings = false;
 	const std::shared_ptr<Datum> getCDatum(std::string camera_name);
 	std::vector<cv::Point2f> getImageCoordinates(int imgh, int imgw);
 	std::vector<cv::Point2f> getImageCoordinatesXOffset(int imgh, int imgw);
