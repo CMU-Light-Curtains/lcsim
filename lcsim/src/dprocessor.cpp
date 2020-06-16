@@ -776,7 +776,7 @@ std::pair<cv::Mat, cv::Mat> DatumProcessor::calculateSurface(const Eigen::Matrix
         }
         laser_angles_temp.emplace_back(new_pt);
     }
-    //laser_angles = laser_angles_temp;
+    laser_angles = laser_angles_temp;
     //if(exceed) ROS_WARN("Design points have exceeded laser limit");
 
     Eigen::Matrix4Xf planes_lframe = Eigen::Matrix4Xf::Zero(4, laser_angles.size());
