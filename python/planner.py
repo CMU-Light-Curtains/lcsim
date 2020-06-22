@@ -164,8 +164,11 @@ class PlannerRT(Planner):
     def __init__(self, lc_device, ranges, num_camera_angles, debug=False):
         super(PlannerRT, self).__init__(lc_device, debug)
 
-        interpolator = pylc_lib.PolarIdentityInterpolator(num_camera_angles, len(ranges))
-        self._planner = pylc_lib.Planner(self._lc_device.datum_processor, ranges, interpolator, self._debug)
+        self.ranges = ranges
+        self.num_camera_angles = num_camera_angles
+
+        interpolator = pylc_lib.PolarIdentityInterpolator(self.num_camera_angles, len(self.ranges))
+        self._planner = pylc_lib.Planner(self._lc_device.datum_processor, self.ranges, interpolator, self._debug)
 
     def get_design_points(self, umap):
         """
