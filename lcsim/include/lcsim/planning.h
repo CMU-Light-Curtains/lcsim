@@ -33,15 +33,15 @@ public:
 template <bool MAX>
 class Trajectory {
 public:
-    float unc;  // sum of costs to be maximized or minimized
+    float cost;  // sum of costs to be maximized or minimized
     float las;  // sum of squares of laser angle deviation to be minimized
 
     Node* pNode;  // node the trajectory starts from
     Trajectory* pSubTraj;  // the rest of the sub-trajectory;
 
     Trajectory();
-    Trajectory(Node* pNode_, const Eigen::MatrixXf& umap);
-    Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixXf& umap);
+    Trajectory(Node* pNode_, const Eigen::MatrixXf& cmap);
+    Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixXf& cmap);
     ~Trajectory();
 
     bool operator< (const Trajectory& o);
@@ -51,18 +51,18 @@ public:
 
 class Interpolator {
 public:
-    virtual std::pair<int, int> getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const = 0;
-    virtual bool isUmapShapeValid(int nrows, int ncols) const = 0;
+    virtual std::pair<int, int> getCmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const = 0;
+    virtual bool isCmapShapeValid(int nrows, int ncols) const = 0;
 };
 
 class CartesianNNInterpolator : public Interpolator {
 private:
-    int umap_w_, umap_h_;
+    int cmap_w_, cmap_h_;
     float x_min_, x_max_, z_min_, z_max_;
 public:
-    CartesianNNInterpolator(int umap_w, int umap_h, float x_min, float x_max, float z_min, float z_max);
-    std::pair<int, int> getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const override;
-    bool isUmapShapeValid(int nrows, int ncols) const override;
+    CartesianNNInterpolator(int cmap_w, int cmap_h, float x_min, float x_max, float z_min, float z_max);
+    std::pair<int, int> getCmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const override;
+    bool isCmapShapeValid(int nrows, int ncols) const override;
 };
 
 class PolarIdentityInterpolator : public Interpolator {
@@ -70,8 +70,8 @@ private:
     int num_camera_rays_, num_ranges_;
 public:
     PolarIdentityInterpolator(int num_camera_rays, int num_ranges);
-    std::pair<int, int> getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const override;
-    bool isUmapShapeValid(int nrows, int ncols) const override;
+    std::pair<int, int> getCmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const override;
+    bool isCmapShapeValid(int nrows, int ncols) const override;
 };
 
 template <bool MAX>
@@ -98,7 +98,7 @@ public:
             bool debug);
     ~Planner();
 
-    std::vector<std::pair<float, float>> optimizedDesignPts(Eigen::MatrixXf umap);
+    std::vector<std::pair<float, float>> optimizedDesignPts(Eigen::MatrixXf cmap);
 
     std::vector<std::vector<std::pair<Node, int>>> getVectorizedGraph();
 };
