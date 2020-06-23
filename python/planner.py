@@ -10,8 +10,9 @@ from sim import LCDevice
 
 
 class Planner(object):
-    def __init__(self, lc_device, debug=False):
+    def __init__(self, lc_device, maximize=True, debug=False):
         self._lc_device = lc_device
+        self._maximize = maximize
         self._debug = debug
         self._planner = None
 
@@ -109,8 +110,8 @@ class Planner(object):
 
 
 class PlannerXY(Planner):
-    def __init__(self, lc_device, pts_per_cam_ray=80, debug=False):
-        super(PlannerXY, self).__init__(lc_device, debug)
+    def __init__(self, lc_device, pts_per_cam_ray=80, maximize=True, debug=False):
+        super(PlannerXY, self).__init__(lc_device, maximize, debug)
         self._pts_per_cam_ray = pts_per_cam_ray
 
     def get_design_points(self, confidence_map):
@@ -146,7 +147,8 @@ class PlannerXY(Planner):
             # Create ranges.
             ranges = list(np.linspace(3.0, z_max, self._pts_per_cam_ray))
 
-            self._planner = pylc_lib.Planner(self._lc_device.datum_processor, ranges, interpolator, self._debug)
+            planner_class = pylc_lib.PlannerMax if self._maximize else pylc_lib.PlannerMin
+            self._planner = planner_class(self._lc_device.datum_processor, ranges, interpolator, self._debug)
 
             if self._debug:
                 self._visualize_graph(uncertainty_map[:, :, 2])
@@ -161,14 +163,16 @@ class PlannerXY(Planner):
 
 
 class PlannerRT(Planner):
-    def __init__(self, lc_device, ranges, num_camera_angles, debug=False):
-        super(PlannerRT, self).__init__(lc_device, debug)
+    def __init__(self, lc_device, ranges, num_camera_angles, maximize=True, debug=False):
+        super(PlannerRT, self).__init__(lc_device, maximize, debug)
 
         self.ranges = ranges
         self.num_camera_angles = num_camera_angles
 
         interpolator = pylc_lib.PolarIdentityInterpolator(self.num_camera_angles, len(self.ranges))
-        self._planner = pylc_lib.Planner(self._lc_device.datum_processor, self.ranges, interpolator, self._debug)
+
+        planner_class = pylc_lib.PlannerMax if self._maximize else pylc_lib.PlannerMin
+        self._planner = planner_class(self._lc_device.datum_processor, self.ranges, interpolator, self._debug)
 
     def get_design_points(self, umap):
         """

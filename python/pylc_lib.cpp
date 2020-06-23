@@ -233,10 +233,16 @@ PYBIND11_MODULE(pylc_lib, m) {
             .def(py::init<int, int> ())
             ;
 
-    py::class_<Planner, std::shared_ptr<Planner>>(m, "Planner")
+    py::class_<Planner<true>, std::shared_ptr<Planner<true>>>(m, "PlannerMax")
             .def(py::init<std::shared_ptr<DatumProcessor>, const std::vector<float>&, std::shared_ptr<Interpolator>, bool> ())
-            .def("getGraphForVis", &Planner::getVectorizedGraph)
-            .def("optimizedDesignPts", &Planner::optimizedDesignPts)
+            .def("getGraphForVis", &Planner<true>::getVectorizedGraph)
+            .def("optimizedDesignPts", &Planner<true>::optimizedDesignPts)
+            ;
+
+    py::class_<Planner<false>, std::shared_ptr<Planner<false>>>(m, "PlannerMin")
+            .def(py::init<std::shared_ptr<DatumProcessor>, const std::vector<float>&, std::shared_ptr<Interpolator>, bool> ())
+            .def("getGraphForVis", &Planner<false>::getVectorizedGraph)
+            .def("optimizedDesignPts", &Planner<false>::optimizedDesignPts)
             ;
 
     m.def("processPointsJoint", &processPointsJoint, "processPointsJoint");

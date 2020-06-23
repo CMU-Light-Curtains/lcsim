@@ -14,6 +14,7 @@
 
 namespace lc {
 
+#define INF std::numeric_limits<float>::infinity()
 
 struct Node {
 public:
@@ -29,10 +30,11 @@ public:
     void fill(float x_, float z_, float r_, float theta_cam_, float theta_las_, long ki_, long kj_);
 };
 
+template <bool MAX>
 class Trajectory {
 public:
-    float unc;  // sum of uncertainties
-    float las;  // sum of squares of laser angle deviation
+    float unc;  // sum of costs to be maximized or minimized
+    float las;  // sum of squares of laser angle deviation to be minimized
 
     Node* pNode;  // node the trajectory starts from
     Trajectory* pSubTraj;  // the rest of the sub-trajectory;
@@ -72,6 +74,7 @@ public:
     bool isUmapShapeValid(int nrows, int ncols) const override;
 };
 
+template <bool MAX>
 class Planner {
 private:
     bool debug_;
@@ -81,7 +84,7 @@ private:
     Eigen::Matrix4f laser_to_cam_;
 
     Node graph_[MAX_RAYS][MAX_NODES_PER_RAY];
-    Trajectory dp_[MAX_RAYS][MAX_NODES_PER_RAY];
+    Trajectory<MAX> dp_[MAX_RAYS][MAX_NODES_PER_RAY];
     const std::vector<float> ranges_;
     std::shared_ptr<Interpolator> interpolator_;
     int num_camera_rays_, num_nodes_per_ray_;
@@ -99,6 +102,10 @@ public:
 
     std::vector<std::vector<std::pair<Node, int>>> getVectorizedGraph();
 };
+
+// explicit instantiations
+template class Planner<true>;
+template class Planner<false>;
 
 }
 

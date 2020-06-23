@@ -11,10 +11,12 @@ float rad2deg(float rad) {
 }
 // -----------------------------
 
-Planner::Planner(std::shared_ptr<DatumProcessor> datumProcessor,
-                 const std::vector<float>& ranges,
-                 std::shared_ptr<Interpolator> interpolator,
-                 bool debug) : datumProcessor_(datumProcessor), ranges_(ranges), interpolator_(interpolator), debug_(debug){
+template<bool MAX>
+Planner<MAX>::Planner(std::shared_ptr<DatumProcessor> datumProcessor,
+                      const std::vector<float>& ranges,
+                      std::shared_ptr<Interpolator> interpolator,
+                      bool debug)
+                      : datumProcessor_(datumProcessor), ranges_(ranges), interpolator_(interpolator), debug_(debug){
     std::shared_ptr<Datum> c_datum = datumProcessor_->getCDatum("camera01");  // assume only one camera named camera01
     Laser laser = c_datum->laser_data["laser01"];  // assume only one camera named camera01
 
@@ -32,7 +34,8 @@ Planner::Planner(std::shared_ptr<DatumProcessor> datumProcessor,
     constructGraph();
 }
 
-void Planner::constructGraph() {
+template<bool MAX>
+void Planner<MAX>::constructGraph() {
     // Add nodes in the graph.
     for (int ray_i = 0; ray_i < num_camera_rays_; ray_i++)
         for (int range_i = 0; range_i < num_nodes_per_ray_; range_i++) {
@@ -72,7 +75,8 @@ void Planner::constructGraph() {
     }
 }
 
-std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf umap) {
+template<bool MAX>
+std::vector<std::pair<float, float>> Planner<MAX>::optimizedDesignPts(Eigen::MatrixXf umap) {
     // Check if umap shape is as expected.
     if (!interpolator_->isUmapShapeValid(umap.rows(), umap.cols()))
         throw std::invalid_argument(std::string("PYLC_PLANNER: Unexpected umap shape (")
@@ -86,13 +90,13 @@ std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf
 
             if (ray_i == num_camera_rays_ - 1) {
                 // For last ray, the trajectory starts and ends at the same node.
-                dp_[ray_i][range_i] = Trajectory(pNode, umap);
+                dp_[ray_i][range_i] = Trajectory<MAX>(pNode, umap);
             } else {
                 // For non-last ray, iterate over all its valid neighbors to select best sub-trajectory.
                 for (int edge_i = 0; edge_i < pNode->edges.size(); edge_i++) {
                     std::pair<int, int>& edge = pNode->edges[edge_i];
-                    Trajectory* pSubTraj = &(dp_[edge.first][edge.second]);
-                    Trajectory traj(pNode, pSubTraj, umap);
+                    Trajectory<MAX>* pSubTraj = &(dp_[edge.first][edge.second]);
+                    Trajectory<MAX> traj(pNode, pSubTraj, umap);
                     if (edge_i == 0 || traj > dp_[ray_i][range_i])
                         dp_[ray_i][range_i] = traj;
                 }
@@ -101,7 +105,7 @@ std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf
     }
 
     // Select overall best trajectory.
-    Trajectory best_traj = dp_[0][0];
+    Trajectory<MAX> best_traj = dp_[0][0];
     for (int range_i = 1; range_i < num_nodes_per_ray_; range_i++)
         if (dp_[0][range_i] > best_traj)
             best_traj = dp_[0][range_i];
@@ -128,7 +132,8 @@ std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf
     return design_pts;
 }
 
-std::vector<std::vector<std::pair<Node, int>>> Planner::getVectorizedGraph() {
+template <bool MAX>
+std::vector<std::vector<std::pair<Node, int>>> Planner<MAX>::getVectorizedGraph() {
     std::vector<std::vector<std::pair<Node, int>>> m;
 
     // Copy 2D array to matrix.
@@ -142,7 +147,8 @@ std::vector<std::vector<std::pair<Node, int>>> Planner::getVectorizedGraph() {
     return m;
 }
 
-Planner::~Planner() = default;
+template <bool MAX>
+Planner<MAX>::~Planner() = default;
 
 Node::Node() = default;
 
@@ -162,31 +168,35 @@ void Node::fill(float x_, float z_, float r_, float theta_cam_, float theta_las_
     edges = std::vector<std::pair<int, int>>();
 }
 
-Trajectory::Trajectory() {
+template<bool MAX>
+Trajectory<MAX>::Trajectory() {
     pNode = nullptr;
     pSubTraj = nullptr;
-    unc = 0.0f;
+    unc = MAX ? -INF : INF;  // for maximization: init with -INF; for minimization: init with +INF
     las = 0.0f;
 }
 
-Trajectory::Trajectory(Node* pNode_, const Eigen::MatrixXf& umap) {
+template<bool MAX>
+Trajectory<MAX>::Trajectory(Node* pNode_, const Eigen::MatrixXf& umap) {
     // Start node.
     pNode = pNode_;
 
     // Sub-trajectory.
     pSubTraj = nullptr;
 
-    // Uncertainty.
+    // Cost.
     if ((pNode->ki != -1) && (pNode->kj != -1))
         unc = umap(pNode->ki, pNode->kj);
     else
-        unc = 0.0f;
+        unc = MAX ? -INF : INF;
 
     // Laser penalty.
     las = 0.0f;
 }
 
-Trajectory::Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixXf& umap) : Trajectory(pNode_, umap) {
+template<bool MAX>
+Trajectory<MAX>::Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixXf& umap)
+                           : Trajectory(pNode_, umap) {
     // Start Node : delegated.
 
     // Sub-trajectory.
@@ -201,25 +211,32 @@ Trajectory::Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixX
     las = d_theta_cam * d_theta_cam + pSubTraj->las;
 }
 
-bool Trajectory::operator<(const Trajectory& t) {
-    if (unc < t.unc)
-        return true;
-    else if (unc == t.unc)
+// Traj1 < Traj2 means that Traj1 is WORSE that Traj2
+template<bool MAX>
+bool Trajectory<MAX>::operator<(const Trajectory& t) {
+    if (unc == t.unc)
         return las > t.las;
+
+    if (MAX)
+        return unc < t.unc;
     else
-        return false;
+        return unc > t.unc;
 }
 
-bool Trajectory::operator>(const Trajectory& t) {
-    if (unc > t.unc)
-        return true;
-    else if (unc == t.unc)
+// Traj1 > Traj2 means that Traj1 is BETTER that Traj2
+template<bool MAX>
+bool Trajectory<MAX>::operator>(const Trajectory& t) {
+    if (unc == t.unc)
         return las < t.las;
+
+    if (MAX)
+        return unc > t.unc;
     else
-        return false;
+        return unc < t.unc;
 }
 
-Trajectory::~Trajectory() = default;
+template<bool MAX>
+Trajectory<MAX>::~Trajectory() = default;
 
 CartesianNNInterpolator::CartesianNNInterpolator(int umap_w, int umap_h,
                                                  float x_min, float x_max, float z_min, float z_max) {
