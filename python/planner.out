@@ -1,0 +1,13 @@
+# Results of running planner.py
+
+XY (3m to right):
+    PYLC_PLANNER: Max change in laser angle: 0.21°
+    PYLC_PLANNER: mean connectivity across adjacent rays: 6.58%
+    PYLC_PLANNER: Optimal cost         : 239.352
+                  Optimal laser penalty: 6.539
+
+RT (20cm to right):
+    PYLC_PLANNER: Max change in laser angle: 0.2100°
+    PYLC_PLANNER: mean connectivity across adjacent rays: 39.27%
+    PYLC_PLANNER: Optimal cost         : 368.347
+                  Optimal laser penalty: 5.061

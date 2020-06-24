@@ -11,10 +11,12 @@ float rad2deg(float rad) {
 }
 // -----------------------------
 
-Planner::Planner(std::shared_ptr<DatumProcessor> datumProcessor,
-                 const std::vector<float>& ranges,
-                 std::shared_ptr<Interpolator> interpolator,
-                 bool debug) : datumProcessor_(datumProcessor), ranges_(ranges), interpolator_(interpolator), debug_(debug){
+template<bool MAX>
+Planner<MAX>::Planner(std::shared_ptr<DatumProcessor> datumProcessor,
+                      const std::vector<float>& ranges,
+                      std::shared_ptr<Interpolator> interpolator,
+                      bool debug)
+                      : datumProcessor_(datumProcessor), ranges_(ranges), interpolator_(interpolator), debug_(debug){
     std::shared_ptr<Datum> c_datum = datumProcessor_->getCDatum("camera01");  // assume only one camera named camera01
     Laser laser = c_datum->laser_data["laser01"];  // assume only one camera named camera01
 
@@ -32,7 +34,8 @@ Planner::Planner(std::shared_ptr<DatumProcessor> datumProcessor,
     constructGraph();
 }
 
-void Planner::constructGraph() {
+template<bool MAX>
+void Planner<MAX>::constructGraph() {
     // Add nodes in the graph.
     for (int ray_i = 0; ray_i < num_camera_rays_; ray_i++)
         for (int range_i = 0; range_i < num_nodes_per_ray_; range_i++) {
@@ -47,7 +50,7 @@ void Planner::constructGraph() {
             float x_las = xyz1_las(0), z_las = xyz1_las(2);
             float theta_las = rad2deg(std::atan2(x_las, z_las));
 
-            std::pair<int, int> k = interpolator_->getUmapIndex(x, z, r, theta_cam, theta_las, ray_i, range_i);
+            std::pair<int, int> k = interpolator_->getCmapIndex(x, z, r, theta_cam, theta_las, ray_i, range_i);
             int ki = k.first, kj = k.second;
 
             graph_[ray_i][range_i].fill(x, z, r, theta_cam, theta_las, ki, kj);
@@ -72,11 +75,12 @@ void Planner::constructGraph() {
     }
 }
 
-std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf umap) {
-    // Check if umap shape is as expected.
-    if (!interpolator_->isUmapShapeValid(umap.rows(), umap.cols()))
-        throw std::invalid_argument(std::string("PYLC_PLANNER: Unexpected umap shape (")
-                                    + std::to_string(umap.size())
+template<bool MAX>
+std::vector<std::pair<float, float>> Planner<MAX>::optimizedDesignPts(Eigen::MatrixXf cmap) {
+    // Check if cmap shape is as expected.
+    if (!interpolator_->isCmapShapeValid(cmap.rows(), cmap.cols()))
+        throw std::invalid_argument(std::string("PYLC_PLANNER: Unexpected cmap shape (")
+                                    + std::to_string(cmap.size())
                                     + std::string(")."));
 
     // Backward pass.
@@ -86,13 +90,13 @@ std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf
 
             if (ray_i == num_camera_rays_ - 1) {
                 // For last ray, the trajectory starts and ends at the same node.
-                dp_[ray_i][range_i] = Trajectory(pNode, umap);
+                dp_[ray_i][range_i] = Trajectory<MAX>(pNode, cmap);
             } else {
                 // For non-last ray, iterate over all its valid neighbors to select best sub-trajectory.
                 for (int edge_i = 0; edge_i < pNode->edges.size(); edge_i++) {
                     std::pair<int, int>& edge = pNode->edges[edge_i];
-                    Trajectory* pSubTraj = &(dp_[edge.first][edge.second]);
-                    Trajectory traj(pNode, pSubTraj, umap);
+                    Trajectory<MAX>* pSubTraj = &(dp_[edge.first][edge.second]);
+                    Trajectory<MAX> traj(pNode, pSubTraj, cmap);
                     if (edge_i == 0 || traj > dp_[ray_i][range_i])
                         dp_[ray_i][range_i] = traj;
                 }
@@ -101,14 +105,14 @@ std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf
     }
 
     // Select overall best trajectory.
-    Trajectory best_traj = dp_[0][0];
+    Trajectory<MAX> best_traj = dp_[0][0];
     for (int range_i = 1; range_i < num_nodes_per_ray_; range_i++)
         if (dp_[0][range_i] > best_traj)
             best_traj = dp_[0][range_i];
 
     if (debug_) {
         std::cout << std::fixed << std::setprecision(3)
-                  << "PYLC_PLANNER: Optimal uncertainty  : " << best_traj.unc << std::endl
+                  << "PYLC_PLANNER: Optimal cost         : " << best_traj.cost << std::endl
                   << "              Optimal laser penalty: " << best_traj.las << std::endl
                   ;
     }
@@ -128,7 +132,8 @@ std::vector<std::pair<float, float>> Planner::optimizedDesignPts(Eigen::MatrixXf
     return design_pts;
 }
 
-std::vector<std::vector<std::pair<Node, int>>> Planner::getVectorizedGraph() {
+template <bool MAX>
+std::vector<std::vector<std::pair<Node, int>>> Planner<MAX>::getVectorizedGraph() {
     std::vector<std::vector<std::pair<Node, int>>> m;
 
     // Copy 2D array to matrix.
@@ -142,7 +147,8 @@ std::vector<std::vector<std::pair<Node, int>>> Planner::getVectorizedGraph() {
     return m;
 }
 
-Planner::~Planner() = default;
+template <bool MAX>
+Planner<MAX>::~Planner() = default;
 
 Node::Node() = default;
 
@@ -162,31 +168,35 @@ void Node::fill(float x_, float z_, float r_, float theta_cam_, float theta_las_
     edges = std::vector<std::pair<int, int>>();
 }
 
-Trajectory::Trajectory() {
+template<bool MAX>
+Trajectory<MAX>::Trajectory() {
     pNode = nullptr;
     pSubTraj = nullptr;
-    unc = 0.0f;
+    cost = MAX ? -INF : INF;  // for maximization: init with -INF; for minimization: init with +INF
     las = 0.0f;
 }
 
-Trajectory::Trajectory(Node* pNode_, const Eigen::MatrixXf& umap) {
+template<bool MAX>
+Trajectory<MAX>::Trajectory(Node* pNode_, const Eigen::MatrixXf& cmap) {
     // Start node.
     pNode = pNode_;
 
     // Sub-trajectory.
     pSubTraj = nullptr;
 
-    // Uncertainty.
+    // Cost.
     if ((pNode->ki != -1) && (pNode->kj != -1))
-        unc = umap(pNode->ki, pNode->kj);
+        cost = cmap(pNode->ki, pNode->kj);
     else
-        unc = 0.0f;
+        cost = MAX ? -INF : INF;
 
     // Laser penalty.
     las = 0.0f;
 }
 
-Trajectory::Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixXf& umap) : Trajectory(pNode_, umap) {
+template<bool MAX>
+Trajectory<MAX>::Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixXf& cmap)
+                           : Trajectory(pNode_, cmap) {
     // Start Node : delegated.
 
     // Sub-trajectory.
@@ -194,74 +204,81 @@ Trajectory::Trajectory(Node* pNode_, Trajectory* pSubTraj_, const Eigen::MatrixX
 
     // Uncertainty.
     // Initialized from delegation.
-    unc += pSubTraj->unc;
+    cost += pSubTraj->cost;
 
     // Laser angle penalty : sum of squares of laser angle changes.
     float d_theta_cam = pSubTraj->pNode->theta_las - pNode->theta_las;
     las = d_theta_cam * d_theta_cam + pSubTraj->las;
 }
 
-bool Trajectory::operator<(const Trajectory& t) {
-    if (unc < t.unc)
-        return true;
-    else if (unc == t.unc)
+// Traj1 < Traj2 means that Traj1 is WORSE that Traj2
+template<bool MAX>
+bool Trajectory<MAX>::operator<(const Trajectory& t) {
+    if (cost == t.cost)
         return las > t.las;
+
+    if (MAX)
+        return cost < t.cost;
     else
-        return false;
+        return cost > t.cost;
 }
 
-bool Trajectory::operator>(const Trajectory& t) {
-    if (unc > t.unc)
-        return true;
-    else if (unc == t.unc)
+// Traj1 > Traj2 means that Traj1 is BETTER that Traj2
+template<bool MAX>
+bool Trajectory<MAX>::operator>(const Trajectory& t) {
+    if (cost == t.cost)
         return las < t.las;
+
+    if (MAX)
+        return cost > t.cost;
     else
-        return false;
+        return cost < t.cost;
 }
 
-Trajectory::~Trajectory() = default;
+template<bool MAX>
+Trajectory<MAX>::~Trajectory() = default;
 
-CartesianNNInterpolator::CartesianNNInterpolator(int umap_w, int umap_h,
+CartesianNNInterpolator::CartesianNNInterpolator(int cmap_w, int cmap_h,
                                                  float x_min, float x_max, float z_min, float z_max) {
-    umap_w_ = umap_w;
-    umap_h_ = umap_h;
+    cmap_w_ = cmap_w;
+    cmap_h_ = cmap_h;
     x_min_ = x_min;
     x_max_ = x_max;
     z_min_ = z_min;
     z_max_ = z_max;
 }
 
-std::pair<int, int> CartesianNNInterpolator::getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const {
-    // This function assumes that uncertainty_map is a 2D grid with evenly spaced xs and zs.
+std::pair<int, int> CartesianNNInterpolator::getCmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const {
+    // This function assumes that the cost map is a 2D grid with evenly spaced xs and zs.
     // It also assumes that X and Z are increasing with a fixed increment.
 
-    float x_incr = (x_max_ - x_min_) / float(umap_h_ - 1);
-    float z_incr = (z_max_ - z_min_) / float(umap_w_ - 1);
+    float x_incr = (x_max_ - x_min_) / float(cmap_h_ - 1);
+    float z_incr = (z_max_ - z_min_) / float(cmap_w_ - 1);
 
     // Convert to pixel coordinates.
     long ki = std::lround((x - x_min_) / x_incr);
     long kj = std::lround((z - z_min_) / z_incr);
 
-    if (ki < 0 || ki >= umap_h_)
-        ki = -1;  // means that this is outside the umap grid
+    if (ki < 0 || ki >= cmap_h_)
+        ki = -1;  // means that this is outside the cmap grid
 
-    if (kj < 0 || kj >= umap_w_)
-        kj = -1;  // means that this is outside the umap grid
+    if (kj < 0 || kj >= cmap_w_)
+        kj = -1;  // means that this is outside the cmap grid
 
     return {ki, kj};
 }
 
-bool CartesianNNInterpolator::isUmapShapeValid(int nrows, int ncols) const {
-    return (nrows == umap_h_) && (ncols == umap_w_);
+bool CartesianNNInterpolator::isCmapShapeValid(int nrows, int ncols) const {
+    return (nrows == cmap_h_) && (ncols == cmap_w_);
 }
 
 PolarIdentityInterpolator::PolarIdentityInterpolator(int num_camera_rays, int num_ranges)
     : num_camera_rays_(num_camera_rays), num_ranges_(num_ranges) {}
 
-std::pair<int, int> PolarIdentityInterpolator::getUmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const {
+std::pair<int, int> PolarIdentityInterpolator::getCmapIndex(float x, float z, float r, float theta_cam, float theta_las, int ray_i, int range_i) const {
     return {range_i, ray_i};
 }
 
-bool PolarIdentityInterpolator::isUmapShapeValid(int nrows, int ncols) const {
+bool PolarIdentityInterpolator::isCmapShapeValid(int nrows, int ncols) const {
     return (nrows == num_ranges_) && (ncols == num_camera_rays_);
 }
