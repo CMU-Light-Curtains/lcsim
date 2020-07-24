@@ -85,6 +85,7 @@ std::vector<std::pair<float, float>> Planner<MAX>::optimizedDesignPts(Eigen::Mat
 
     // Backward pass.
     for (int ray_i = num_camera_rays_ - 1; ray_i >= 0; ray_i--) {
+        #pragma omp parallel for
         for (int range_i = 0; range_i < num_nodes_per_ray_; range_i++) {
             Node* pNode = &(graph_[ray_i][range_i]);
 

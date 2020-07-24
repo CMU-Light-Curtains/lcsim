@@ -3,6 +3,9 @@ project(lcsim)
 
 set (CMAKE_CXX_STANDARD 11)
 
+# add -fopenmp
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+
 find_package(PythonLibs 3)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
