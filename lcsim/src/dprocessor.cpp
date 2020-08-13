@@ -146,7 +146,7 @@ Eigen::Vector4f DatumProcessor::createPlaneFromPoints(const Eigen::Matrix3f& _pt
     Eigen::Vector3f P0P2 = P2-P0;
 
     Eigen::Vector3f n = P0P1.cross(P0P2);
-    float d = P0.dot(n);
+    float d = -P0.dot(n);
 
     Eigen::Vector4f plane(n(0),n(1),n(2),d);
 
