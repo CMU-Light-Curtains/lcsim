@@ -81,7 +81,7 @@ private:
     std::shared_ptr<DatumProcessor> datumProcessor_;
     std::vector<float> camera_angles_;
     float max_d_las_angle_;
-    Eigen::Matrix4f laser_to_cam_;
+    Eigen::Matrix4f cam_to_laser_;
 
     Node graph_[MAX_RAYS][MAX_NODES_PER_RAY];
     Trajectory<MAX> dp_[MAX_RAYS][MAX_NODES_PER_RAY];
