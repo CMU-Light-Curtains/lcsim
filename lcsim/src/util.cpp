@@ -45,7 +45,7 @@ Eigen::Matrix4f Util::getTransformMatrix(float yaw, float pitch, float roll, flo
 }
 
 void Util::intersect(float A, float B, float C, float D, const cv::Vec3f& rayEq, cv::Vec4f& coord3D){
-    float t = -D/(A*rayEq[0] + B*rayEq[1] + C);
+    float t = -D/(A*rayEq[0] + B*rayEq[1] + C*rayEq[2]);
     coord3D[0] = rayEq[0]*t;
     coord3D[1] = rayEq[1]*t;
     coord3D[2] = rayEq[2]*t;
