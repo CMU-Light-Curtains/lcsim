@@ -50,8 +50,8 @@ class LCDevice:
             divergence=0.11/2.,
             laser_limit=14000,
             laser_timestep=1.5e-5,
-            lTc=None,
-            lTw=None
+            cam_to_laser=None,
+            laser_to_world=None
         )
         # Merge with defaults.
         if LASER_PARAMS is not None:
@@ -69,7 +69,7 @@ class LCDevice:
             matrix=None,
             hit_mode = 0,
             hit_noise = 0.,
-            cTw=None,
+            cam_to_world=None,
         )
         # Merge with defaults.
         if CAMERA_PARAMS is not None:
@@ -108,9 +108,9 @@ class LCDevice:
         c_datum.rgb_matrix = self.CAMERA_PARAMS['matrix']
         c_datum.limit = self.CAMERA_PARAMS['limit']
         c_datum.depth_matrix = self.CAMERA_PARAMS['matrix']
-        c_datum.cam_to_world = self.TRANSFORMS['cTw']
+        c_datum.cam_to_world = self.TRANSFORMS['cam_to_world']
 
-        c_datum.cam_to_laser = {u'laser01': self.TRANSFORMS['lTc']}  # TODO: figure out why cam_to_laser is assigned lTc
+        c_datum.cam_to_laser = {u'laser01': self.TRANSFORMS['cam_to_laser']}
         c_datum.fov = self.CAMERA_PARAMS['fov']
         c_datum.distortion = np.array(self.CAMERA_PARAMS['distortion'], dtype=np.float32).reshape(1,5)
         c_datum.imgh = self.CAMERA_PARAMS['height']
@@ -130,6 +130,10 @@ class LCDevice:
 
     def _get_transform_from_xyzrpy(self, x, y, z, roll, pitch, yaw):
         # convert roll, pitch, yaw to radians.
+        # Interpretation: transformation matrix FROM the new coordinate frame rotated according to
+        #                 x, y, z, roll, pitch, yaw, TO the original coordinate frame.
+        # NOTE: roll, pitch, yaw correspond to rotation about the x, y, z axes respectively about the FIXED axes in the
+        #       ORIGINAL frame.
         roll, pitch, yaw = roll * np.pi/180., pitch * np.pi/180., yaw * np.pi/180.
         transform = euler_matrix(roll, pitch, yaw)
         transform[:3, 3] = [x, y, z]
@@ -138,33 +142,33 @@ class LCDevice:
     def _compute_transforms(self):
         TRANSFORMS = {}
 
-        if self.CAMERA_PARAMS['cTw'] is not None:
-            TRANSFORMS['cTw'] = self.CAMERA_PARAMS['cTw']
+        if self.CAMERA_PARAMS['cam_to_world'] is not None:
+            TRANSFORMS['cam_to_world'] = self.CAMERA_PARAMS['cam_to_world']
         else:
-            TRANSFORMS['cTw'] = self._get_transform_from_xyzrpy(self.CAMERA_PARAMS['x'],
-                                                                self.CAMERA_PARAMS['y'],
-                                                                self.CAMERA_PARAMS['z'],
-                                                                self.CAMERA_PARAMS['roll'],
-                                                                self.CAMERA_PARAMS['pitch'],
-                                                                self.CAMERA_PARAMS['yaw'])
-        TRANSFORMS['wTc'] = np.linalg.inv(TRANSFORMS['cTw'])
+            TRANSFORMS['cam_to_world'] = self._get_transform_from_xyzrpy(self.CAMERA_PARAMS['x'],
+                                                                         self.CAMERA_PARAMS['y'],
+                                                                         self.CAMERA_PARAMS['z'],
+                                                                         self.CAMERA_PARAMS['roll'],
+                                                                         self.CAMERA_PARAMS['pitch'],
+                                                                         self.CAMERA_PARAMS['yaw'])
+        TRANSFORMS['world_to_cam'] = np.linalg.inv(TRANSFORMS['cam_to_world'])
 
-        if self.LASER_PARAMS['lTw'] is not None:
-            TRANSFORMS['lTw'] = self.LASER_PARAMS['lTw']
+        if self.LASER_PARAMS['laser_to_world'] is not None:
+            TRANSFORMS['laser_to_world'] = self.LASER_PARAMS['laser_to_world']
         else:
-            TRANSFORMS['lTw'] = self._get_transform_from_xyzrpy(self.LASER_PARAMS['x'],
-                                                                self.LASER_PARAMS['y'],
-                                                                self.LASER_PARAMS['z'],
-                                                                self.LASER_PARAMS['roll'],
-                                                                self.LASER_PARAMS['pitch'],
-                                                                self.LASER_PARAMS['yaw'])
-        TRANSFORMS['wTl'] = np.linalg.inv(TRANSFORMS['lTw'])
+            TRANSFORMS['laser_to_world'] = self._get_transform_from_xyzrpy(self.LASER_PARAMS['x'],
+                                                                           self.LASER_PARAMS['y'],
+                                                                           self.LASER_PARAMS['z'],
+                                                                           self.LASER_PARAMS['roll'],
+                                                                           self.LASER_PARAMS['pitch'],
+                                                                           self.LASER_PARAMS['yaw'])
+        TRANSFORMS['world_to_laser'] = np.linalg.inv(TRANSFORMS['laser_to_world'])
 
-        if self.LASER_PARAMS['lTc'] is not None:
-            TRANSFORMS['lTc'] = self.LASER_PARAMS['lTc']
+        if self.LASER_PARAMS['cam_to_laser'] is not None:
+            TRANSFORMS['cam_to_laser'] = self.LASER_PARAMS['cam_to_laser']
         else:
-            TRANSFORMS['lTc'] = TRANSFORMS['wTc'].dot(TRANSFORMS['lTw'])
-        TRANSFORMS['cTl'] = np.linalg.inv(TRANSFORMS['lTc'])
+            TRANSFORMS['cam_to_laser'] = TRANSFORMS['world_to_laser'].dot(TRANSFORMS['cam_to_world'])
+        TRANSFORMS['laser_to_cam'] = np.linalg.inv(TRANSFORMS['cam_to_laser'])
 
         return TRANSFORMS
 

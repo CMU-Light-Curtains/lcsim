@@ -146,7 +146,7 @@ Eigen::Vector4f DatumProcessor::createPlaneFromPoints(const Eigen::Matrix3f& _pt
     Eigen::Vector3f P0P2 = P2-P0;
 
     Eigen::Vector3f n = P0P1.cross(P0P2);
-    float d = P0.dot(n);
+    float d = -P0.dot(n);
 
     Eigen::Vector4f plane(n(0),n(1),n(2),d);
 
@@ -843,8 +843,8 @@ std::pair<cv::Mat, cv::Mat> DatumProcessor::calculateSurface(const Eigen::Matrix
         straight_plane(3, 0) = 0.;
 
         // Rotation Matrices
-        Eigen::Matrix4f lrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0) * Util::getTransformMatrix(0,0,0,(laser_data.thickness/2),0,0) * Util::getTransformMatrix(0,-laser_data.divergence,0,0,0,0);
-        Eigen::Matrix4f rrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0) * Util::getTransformMatrix(0,0,0,-(laser_data.thickness/2),0,0) * Util::getTransformMatrix(0,laser_data.divergence,0,0,0,0);
+        Eigen::Matrix4f lrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0) * Util::getTransformMatrix(0,0,0,-(laser_data.thickness/2),0,0) * Util::getTransformMatrix(0,-laser_data.divergence,0,0,0,0);
+        Eigen::Matrix4f rrotated_matrix = Util::getTransformMatrix(0,laser_angle,0,0,0,0) * Util::getTransformMatrix(0,0,0,(laser_data.thickness/2),0,0) * Util::getTransformMatrix(0,laser_data.divergence,0,0,0,0);
 
         // Transform planes
         Eigen::Matrix4Xf lrotated_plane = ((lrotated_matrix.inverse().transpose())*straight_plane);

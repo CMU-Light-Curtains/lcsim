@@ -24,7 +24,7 @@ Planner<MAX>::Planner(std::shared_ptr<DatumProcessor> datumProcessor,
     num_camera_rays_ = camera_angles_.size();
     num_nodes_per_ray_ = ranges_.size();
     max_d_las_angle_ = laser.laser_limit * laser.laser_timestep;
-    laser_to_cam_ = laser.laser_to_cam;
+    cam_to_laser_ = laser.cam_to_laser;
 
     if (debug_) {
         std::cout << std::setprecision(4)
@@ -46,7 +46,7 @@ void Planner<MAX>::constructGraph() {
 
             // Compute laser angle.
             Eigen::Vector4f xyz1_cam(x, 0.0f, z, 1.0f);
-            Eigen::Vector4f xyz1_las = laser_to_cam_ * xyz1_cam;
+            Eigen::Vector4f xyz1_las = cam_to_laser_ * xyz1_cam;
             float x_las = xyz1_las(0), z_las = xyz1_las(2);
             float theta_las = rad2deg(std::atan2(x_las, z_las));
 
