@@ -89,10 +89,9 @@ std::vector<std::pair<float, float>> Planner<MAX>::optimizedDesignPts(Eigen::Mat
         for (int range_i = 0; range_i < num_nodes_per_ray_; range_i++) {
             Node* pNode = &(graph_[ray_i][range_i]);
 
-            if (ray_i == num_camera_rays_ - 1) {
-                // For last ray, the trajectory starts and ends at the same node.
-                dp_[ray_i][range_i] = Trajectory<MAX>(pNode, cmap);
-            } else {
+            // Trajectory starting and ending at current node.
+            dp_[ray_i][range_i] = Trajectory<MAX>(pNode, cmap);
+            if (ray_i < num_camera_rays_ - 1) {
                 // For non-last ray, iterate over all its valid neighbors to select best sub-trajectory.
                 for (int edge_i = 0; edge_i < pNode->edges.size(); edge_i++) {
                     std::pair<int, int>& edge = pNode->edges[edge_i];
