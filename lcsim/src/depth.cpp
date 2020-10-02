@@ -140,6 +140,26 @@ Eigen::MatrixXf Depth::generateDepth(const Eigen::MatrixXf &lidardata, const Eig
     return dmap_cleaned;
 }
 
+std::vector<std::vector<cv::Mat>> Depth::transformPointsBatch(const std::vector<Eigen::MatrixXf>& lidardata_batch, const std::vector<Eigen::VectorXf>& thickdata_batch, const Eigen::MatrixXf& intr_raw, const Eigen::MatrixXf& M_lidar2cam, int width, int height, std::map<std::string, float>& params){
+    // std::vector<std::vector<cv::Mat>> outputs;
+    // outputs.resize(lidardata_batch.size());
+    // //#pragma omp parallel for
+    // for(int i=0; i<lidardata_batch.size(); i++){
+    //     outputs[i] = transformPoints(lidardata_batch[i], thickdata_batch[i], intr_raw, M_lidar2cam, width, height, params);
+    // }
+    // return outputs;
+
+    int N = lidardata_batch.size();
+    std::vector<std::vector<cv::Mat>> outputs(3, std::vector<cv::Mat>(N));
+    for(int i=0; i<N; i++){
+        auto result = transformPoints(lidardata_batch[i], thickdata_batch[i], intr_raw, M_lidar2cam, width, height, params);
+        outputs[0][i] = result[0];
+        outputs[1][i] = result[1];
+        outputs[2][i] = result[2];
+    }
+    return outputs;
+}
+
 std::vector<cv::Mat> Depth::transformPoints(const Eigen::MatrixXf &lidardata, const Eigen::VectorXf &thickdata, const Eigen::MatrixXf &intr_raw, const Eigen::MatrixXf &M_lidar2cam, int width, int height, std::map<std::string, float>& params) {
     int filtering = (int)(params["filtering"]);
 

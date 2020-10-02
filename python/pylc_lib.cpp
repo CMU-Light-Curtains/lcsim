@@ -252,6 +252,7 @@ PYBIND11_MODULE(pylc_lib, m) {
     m.def("solveT", &Algo::solveT, "solveT");
     m.def("generateCameraAngles", &Algo::generateCameraAngles, "generateCameraAngles");
     m.def("transformPoints", &Depth::transformPoints, "transformPoints");
+    m.def("transformPointsBatch", &Depth::transformPointsBatch, "transformPointsBatch");
 
     #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;
