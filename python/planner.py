@@ -174,6 +174,10 @@ class PlannerRT(Planner):
         planner_class = pylc_lib.PlannerMax if self._maximize else pylc_lib.PlannerMin
         self._planner = planner_class(self._lc_device.datum_processor, self.ranges, interpolator, self._debug)
 
+        graph = self._planner.getGraphForVis()
+        self.graph_xz = [[(pair[0].x, pair[0].z) for pair in ray_nodes] for ray_nodes in graph]
+        self.graph_xz = np.array(self.graph_xz)  # (RAYS, NODES_PER_RAY, 2)
+
     def get_design_points(self, umap):
         """
         Args:
@@ -190,6 +194,26 @@ class PlannerRT(Planner):
 
         design_points = self._planner.optimizedDesignPts(umap)
         design_points = np.array(design_points)
+
+        if self._debug:
+            self._visualize_curtain_rt(umap, design_points)
+
+        return design_points
+
+    def get_unconstrained_design_points(self, umap):
+        """
+        Args:
+            umap: (np.ndarray, dtype=float32, shape=(R, C)) objective to maximize.
+                   - R is the number of ranges.
+                   - C is the number of camera rays.
+        Returns:
+            design_points: (np.ndarray, dtype=float32, shape=(N, 2)) point cloud of design points.
+                           Each point (axis 1) contains (x, z) location of design point in camera frame.
+
+        """
+        x_inds = np.arange(self.num_camera_angles)  # (C,)
+        y_inds = umap.argmax(axis=0)  # (C,)  indices of maximum uncertainty for each camera ray
+        design_points = self.graph_xz[x_inds, y_inds]  # (C, 2)
 
         if self._debug:
             self._visualize_curtain_rt(umap, design_points)
