@@ -178,16 +178,15 @@ class LCDevice:
             np_depth_image: (np.ndarray, dtype=float32, shape=(H, W))
             np_design_pts: (np.ndarray, dtype=float32, shape=(N, 2))
                            Axis 1 corresponds to x, z in LC camera frame.
-            get_thickness: (Bool)
+            get_thickness: (bool)
                      Returns the thickness map as the 2nd output
         Returns:
-            lc_output_image: (np.ndarray, dtype=float32, shape=(H, W, 4))) LC image.
+            lc_output_image: (np.ndarray, dtype=float32, shape=(H, W, 4)) LC image.
                              - Channels denote (x, y, z, intensity).
                              - Pixels that aren't a part of LC return will have NaNs in one of
                                the 4 channels.
                              - Intensity ranges from 0. to 255.
-            thickness_image: (np.ndarray, dtype=float32, shape=(H, W, 1))) LC image.
-                             - Channels denote (thickness of sensing)
+            thickness_image: (np.ndarray, dtype=float32, shape=(H, W)) LC thickness.
         """
         pylc_input = pylc_lib.Input()
         pylc_input.camera_name = u'camera01'
