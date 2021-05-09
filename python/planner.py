@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-build_dir = os.path.dirname(os.path.abspath(__file__)) + '/../cmake-build-release'
+build_dir = os.path.dirname(os.path.abspath(__file__)) + '/../build'
 sys.path.append(build_dir)  # should contain pylc_lib compiled .so file
 import pylc_lib
 from sim import LCDevice
